@@ -28,7 +28,8 @@ export type BackendiumRequestType<BodyType, ParamsType, QueryType, HeadersType> 
     query: QueryType,
     headers: HeadersType,
     bodyBuffer: Buffer,
-    options: BackendiumRequestOptionsType<BodyType, ParamsType, QueryType, HeadersType>
+    options: BackendiumRequestOptionsType<BodyType, ParamsType, QueryType, HeadersType>,
+    app: Backendium
 }
 
 function parse<Type>(data: any, validator?: Validator<Type>): Type {
@@ -78,7 +79,7 @@ export default async function parseRequest<BodyType, ParamsType, QueryType, Head
         let query = parse(request.query, queryValidator);
         let headers = parse(request.headers, headersValidator);
         return {
-            expressRequest: request, body, params, query, headers, bodyBuffer,
+            expressRequest: request, body, params, query, headers, bodyBuffer, app,
             options: {bodyValidator, paramsValidator, queryValidator, headersValidator}
         }
     }

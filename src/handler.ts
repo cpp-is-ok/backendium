@@ -7,9 +7,9 @@ export type BackendiumHandlerReturnType = void | undefined | {code?: number, nex
 export type BackendiumHandlerType<BodyType, ParamsType, QueryType, HeadersType> = (request: BackendiumRequestType<BodyType, ParamsType, QueryType, HeadersType>, response: BackendiumResponse, app: Backendium, next: NextFunction) => BackendiumHandlerReturnType | Promise<BackendiumHandlerReturnType>;
 
 export default function backendiumHandler<BodyType, ParamsType, QueryType, HeadersType>(handler: BackendiumHandlerType<BodyType, ParamsType, QueryType, HeadersType>,
-    app: Backendium, validators: BackendiumRequestOptionsType<BodyType, ParamsType, QueryType, HeadersType>
-) {
-    return async (request: Request, response: Response, next: NextFunction) => {
+    validators: BackendiumRequestOptionsType<BodyType, ParamsType, QueryType, HeadersType>
+): (app: Backendium) => ((request: Request, response: Response, next: NextFunction) => Promise<void>) {
+    return (app: Backendium) => (async (request: Request, response: Response, next: NextFunction) => {
         try {
             let req = await parseRequest(request, app, validators);
             if (!req) return;
@@ -29,5 +29,5 @@ export default function backendiumHandler<BodyType, ParamsType, QueryType, Heade
         catch (error) {
             return;
         }
-    };
+    });
 }
