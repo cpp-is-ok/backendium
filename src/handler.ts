@@ -27,6 +27,7 @@ export default function backendiumHandler<BodyType, ParamsType, QueryType, Heade
             catch (error) {return;}
         }
         catch (error) {
+            // @TODO
             return;
         }
     });

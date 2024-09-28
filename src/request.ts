@@ -83,5 +83,7 @@ export default async function parseRequest<BodyType, ParamsType, QueryType, Head
             options: {bodyValidator, paramsValidator, queryValidator, headersValidator}
         }
     }
-    catch (error) {}
+    catch (error) {
+        // @TODO
+    }
 }
