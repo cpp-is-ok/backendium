@@ -3,7 +3,7 @@ import {WSResponse} from "websocket-express";
 import Backendium from "./index.js";
 import {EventEmitter, EventKey} from "event-emitter-typescript";
 import {ValidationError, Validator} from "checkeasy";
-import {WebSocket} from "ws";
+import * as WebSocket from "ws";
 
 interface NextMessageOptions {
     timeout?: number | undefined;
@@ -67,6 +67,8 @@ export class WebSocketRouteConstructor {
             this.eventEmitter.emit("reject", [request, response, app]);
             return;
         }
+        let socket: BackendiumWebSocket = await response.accept();
+
     }
 
     public acceptReject(callback: (request: Request, response: WSResponse, app: Backendium) => boolean | Promise<boolean>): WebSocketRouteConstructor {
@@ -95,7 +97,25 @@ export class WebSocketRouteConstructor {
         return this;
     }
 
-    public on<E extends EventKey<WebSocketRouteConstructorEvents>>(event: E, subscriber: (...args: WebSocketRouteConstructorEvents[E]) => void): () => void {
+    public on_<E extends EventKey<WebSocketRouteConstructorEvents>>(event: E, subscriber: (...args: WebSocketRouteConstructorEvents[E]) => void): () => void {
         return this.eventEmitter.on(event, (args) => subscriber(...args));
+    };
+
+    public once_<E extends EventKey<WebSocketRouteConstructorEvents>>(event: E, subscriber: (...args: WebSocketRouteConstructorEvents[E]) => void): () => void {
+        return this.eventEmitter.once(event, (args) => subscriber(...args));
+    };
+
+    public on<E extends EventKey<WebSocketRouteConstructorEvents>>(event: E, subscriber: (...args: WebSocketRouteConstructorEvents[E]) => void): WebSocketRouteConstructor {
+        this.eventEmitter.on(event, (args) => subscriber(...args));
+        return this;
+    };
+
+    public once<E extends EventKey<WebSocketRouteConstructorEvents>>(event: E, subscriber: (...args: WebSocketRouteConstructorEvents[E]) => void): WebSocketRouteConstructor {
+        this.eventEmitter.once(event, (args) => subscriber(...args));
+        return this;
+    };
+
+    public off<E extends EventKey<WebSocketRouteConstructorEvents>>(event: E, subscriber: (...args: WebSocketRouteConstructorEvents[E]) => void): void {
+        this.eventEmitter.off(event, (args) => subscriber(...args));
     };
 }

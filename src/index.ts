@@ -45,6 +45,14 @@ export default class Backendium extends BackendiumRouter {
         return this.eventEmitter.on(event, (args) => subscriber(...args));
     };
 
+    public once<E extends EventKey<BackendiumEvents>>(event: E, subscriber: (...args: BackendiumEvents[E]) => void): () => void {
+        return this.eventEmitter.once(event, (args) => subscriber(...args));
+    };
+
+    public off<E extends EventKey<BackendiumEvents>>(event: E, subscriber: (...args: BackendiumEvents[E]) => void): void {
+        this.eventEmitter.off(event, (args) => subscriber(...args));
+    };
+
     public start(callback?: (server: Server) => void): Server {
         this.handlers.forEach(([method, route, handlers]) => {
             if (method == "ws") this.addWSHandler(route, handlers.map(handler => handler(this)));
