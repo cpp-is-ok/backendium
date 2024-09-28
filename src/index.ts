@@ -1,7 +1,8 @@
 import express, {RequestHandler} from "express";
-import {Server} from "node:http";
+import {Server, createServer} from "node:http";
 import {BackendiumRouter, MethodType} from "./router.js";
-import {EventEmitter, EventKey, Subscriber} from "event-emitter-typescript";
+import {EventEmitter, EventKey} from "event-emitter-typescript";
+import {Server as SocketIOServer} from "socket.io";
 
 export type BackendiumConfigType = {
     port: number,
@@ -17,7 +18,9 @@ export type BackendiumConfigType = {
 
 export type BackendiumEvents = {
     starting: [],
-    start: [Server]
+    start: [Server, SocketIOServer],
+    "start:http": [Server],
+    "start:socketIO": [SocketIOServer]
 };
 
 export default class Backendium extends BackendiumRouter {
@@ -46,9 +49,13 @@ export default class Backendium extends BackendiumRouter {
             else this.addAnyRouteHandler(method, handlers.map(handler => handler(this)));
         });
         this.eventEmitter.emit("starting", []);
-        let server = this.express.listen(this.config.port ?? 8080, this.config.host ?? "localhost", () => {
+        const server = createServer(this.express);
+        // const socketIOServer = new SocketIOServer(server);
+        server.listen(this.config.port ?? 8080, this.config.host ?? "localhost", () => {
             if (callback) callback(server);
-            this.eventEmitter.emit("start", [server]);
+            this.eventEmitter.emit("start:http", [server]);
+            // this.eventEmitter.emit("start:socketIO", [socketIOServer]);
+            // this.eventEmitter.emit("start", [server, socketIOServer]);
         });
         return server;
     }
