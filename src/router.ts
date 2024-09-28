@@ -21,7 +21,7 @@ export type BackendiumMethodArgsType<BodyType, ParamsType, QueryType, HeadersTyp
 export class BackendiumRouter {
     protected _handlers: Array<[MethodType, string | undefined, Array<(app: Backendium) => RequestHandler>] | ["ws", string, Array<(app: Backendium) => WSRequestHandler>]> = [];
 
-    constructor() {}
+    constructor() {} // @TODO
 
     get handlers() {return this._handlers}
 

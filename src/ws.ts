@@ -32,7 +32,7 @@ export type BackendiumWebSocketEvents = {
     messageBeforeEvents: [Buffer, BackendiumWebSocket, Backendium, boolean],
     close: [BackendiumWebSocket, number, Buffer, Backendium],
     error: [BackendiumWebSocket, Error, Backendium],
-    upgrade: [BackendiumWebSocket, IncomingMessage, Backendium],
+    upgrade: [BackendiumWebSocket, IncomingMessage, Backendium], // @TODO
     open: [BackendiumWebSocket, Backendium],
     ping: [BackendiumWebSocket, Buffer, Backendium],
     pong: [BackendiumWebSocket, Buffer, Backendium],
