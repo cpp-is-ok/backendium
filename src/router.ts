@@ -1,11 +1,14 @@
 import backendiumHandler, {BackendiumHandlerType} from "./handler.js";
 import {BackendiumRequestOptionsType} from "./request.js";
-import {RequestHandler} from "express";
+import {NextFunction, Request, RequestHandler} from "express";
 import Backendium from "./index.js";
+import {WebSocketRouteConstructor} from "./ws.js";
+import {WSRequestHandler, WSResponse} from "websocket-express";
 
 export type MethodType = "use" | "all" | "get" | "post" | "put" | "delete" | "patch" | "options" | "head" | "checkout"
     | "connect" | "copy" | "lock" | "merge" | "mkactivity" | "mkcol" | "move" | "m-search" | "notify" | "propfind"
-    | "proppatch" | "purge" | "report" | "search" | "subscribe" | "unsubscribe" | "trace" | "unlock" | "link" | "unlink";
+    | "proppatch" | "purge" | "report" | "search" | "subscribe" | "unsubscribe" | "trace" | "unlock" | "link" | "unlink"
+    | "useHTTP";
 
 export type BackendiumMethodArgsType<BodyType, ParamsType, QueryType, HeadersType> =
     Array<BackendiumHandlerType<BodyType, ParamsType, QueryType, HeadersType>>
@@ -15,15 +18,10 @@ export type BackendiumMethodArgsType<BodyType, ParamsType, QueryType, HeadersTyp
     | [string, ...Array<BackendiumHandlerType<BodyType, ParamsType, QueryType, HeadersType>>,
     BackendiumRequestOptionsType<BodyType, ParamsType, QueryType, HeadersType>];
 
-export type BackendiumRouterType = {
-    [method in MethodType]: <BodyType, ParamsType, QueryType, HeadersType>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, HeadersType>) => void;
-}
+export class BackendiumRouter {
+    protected _handlers: Array<[MethodType, string | undefined, Array<(app: Backendium) => RequestHandler>] | ["ws", string, Array<(app: Backendium) => WSRequestHandler>]> = [];
 
-export class BackendiumRouter implements BackendiumRouterType {
-    protected _handlers: Array<[MethodType, string | undefined, Array<(app: Backendium) => RequestHandler>]> = [];
-
-    constructor() {
-    }
+    constructor() {}
 
     get handlers() {return this._handlers}
 
@@ -48,6 +46,11 @@ export class BackendiumRouter implements BackendiumRouterType {
     use<BodyType, ParamsType, QueryType, HeadersType>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, HeadersType>
     ): void {
         this.addHandler("use", ...args);
+    }
+
+    useHTTP<BodyType, ParamsType, QueryType, HeadersType>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, HeadersType>
+    ): void {
+        this.addHandler("useHTTP", ...args);
     }
 
     all<BodyType, ParamsType, QueryType, HeadersType>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, HeadersType>
@@ -193,6 +196,14 @@ export class BackendiumRouter implements BackendiumRouterType {
     unlink<BodyType, ParamsType, QueryType, HeadersType>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, HeadersType>
     ): void {
         this.addHandler("unlink", ...args);
+    }
+
+    ws(route: string): WebSocketRouteConstructor {
+        const constructor = new WebSocketRouteConstructor();
+        this._handlers.push(["ws", route, [(app: Backendium) => (request: Request, response: WSResponse, next: NextFunction) => {
+            constructor._handle(request, response, next, app);
+        }]]);
+        return constructor;
     }
 
     router(router: BackendiumRouter) {
