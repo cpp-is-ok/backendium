@@ -32,7 +32,8 @@ export type WebSocketRouteConstructorEvents = {
     open: [BackendiumWebSocket, Backendium],
     ping: [BackendiumWebSocket, Buffer, Backendium],
     pong: [BackendiumWebSocket, Buffer, Backendium],
-    "unexpected-response": [BackendiumWebSocket, ClientRequest, IncomingMessage, Backendium]
+    unexpectedResponse: [BackendiumWebSocket, ClientRequest, IncomingMessage, Backendium],
+    unknownEvent: [Buffer, BackendiumWebSocket, Backendium, boolean]
 };
 
 export type WebSocketEvents = {
@@ -73,6 +74,10 @@ export class WebSocketRouteConstructor {
 
     public static rawDataParse(data: WebSocket.RawData): Buffer {
         return data instanceof Buffer ? data : data instanceof ArrayBuffer ? Buffer.from(data) : data.reduce((prev, cur) => Buffer.concat([prev, cur]), Buffer.alloc(0));
+    }
+
+    protected parseEventMessage(message: string) {
+
     }
 
     public async _handle(request: Request, response: WSResponse, next: NextFunction, app: Backendium): Promise<void> {
