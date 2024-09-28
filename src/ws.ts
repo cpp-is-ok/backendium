@@ -4,6 +4,7 @@ import Backendium from "./index.js";
 import {EventEmitter, EventKey} from "event-emitter-typescript";
 import {ValidationError, Validator} from "checkeasy";
 import * as WebSocket from "ws";
+import {IncomingMessage, ClientRequest} from "node:http";
 
 interface NextMessageOptions {
     timeout?: number | undefined;
@@ -21,10 +22,17 @@ interface WebSocketExtension {
 export type BackendiumWebSocket = WebSocket & WebSocketExtension;
 
 export type WebSocketRouteConstructorEvents = {
-    reject: [Request, WSResponse, Backendium],
+    reject: [Request, WSResponse, Backendium, number | undefined, string | undefined],
     parsingFailed: [Buffer, BackendiumWebSocket, Backendium, Validator<any> | undefined],
-    message: [Buffer, BackendiumWebSocket, Backendium],
-    messageBeforeEvents: [Buffer, BackendiumWebSocket, Backendium]
+    message: [Buffer, BackendiumWebSocket, Backendium, boolean],
+    messageBeforeEvents: [Buffer, BackendiumWebSocket, Backendium, boolean],
+    close: [BackendiumWebSocket, number, Buffer],
+    error: [BackendiumWebSocket, Error],
+    upgrade: [BackendiumWebSocket, IncomingMessage],
+    open: [BackendiumWebSocket],
+    ping: [BackendiumWebSocket, Buffer],
+    pong: [BackendiumWebSocket, Buffer],
+    "unexpected-response": [BackendiumWebSocket, ClientRequest, IncomingMessage]
 };
 
 export type WebSocketEvents = {
@@ -55,27 +63,37 @@ function parse<Type>(data: Buffer, validator: Validator<Type>): [Type, true] | [
     }
 }
 
+export type AcceptResponseCallbackReturnType = boolean | [number | undefined] | [number | undefined, string | undefined];
+
 export class WebSocketRouteConstructor {
     protected eventEmitter = new EventEmitter<WebSocketRouteConstructorEvents>;
     protected wsEventEmitter = new EventEmitter<WebSocketEvents>;
     protected useEvents = false;
-    protected acceptRejectFn: ((request: Request, response: WSResponse, app: Backendium) => Promise<boolean>) | undefined;
+    protected acceptRejectFn: ((request: Request, response: WSResponse, app: Backendium) => Promise<[boolean, number | undefined, string | undefined]>) | undefined;
 
     public async _handle(request: Request, response: WSResponse, next: NextFunction, app: Backendium): Promise<void> {
-        if (this.acceptRejectFn && !(await this.acceptRejectFn(request, response, app))) {
-            response.reject();
-            this.eventEmitter.emit("reject", [request, response, app]);
-            return;
+        if (this.acceptRejectFn) {
+            let [flag, code, message] = await this.acceptRejectFn(request, response, app);
+            if (!flag) {
+                response.reject(code, message);
+                this.eventEmitter.emit("reject", [request, response, app, code, message]);
+                return;
+            }
         }
         let socket: BackendiumWebSocket = await response.accept();
-
+        socket.on("message", (data, isBinary) => {
+            const buffer = data instanceof Buffer ? data : data instanceof ArrayBuffer ? Buffer.from(data) : data.reduce((prev, cur) => Buffer.concat([prev, cur]), Buffer.alloc(0));
+            this.eventEmitter.emit("messageBeforeEvents", [buffer, socket, app, isBinary]);
+            this.eventEmitter.emit("message", [buffer, socket, app, isBinary]);
+        });
     }
 
-    public acceptReject(callback: (request: Request, response: WSResponse, app: Backendium) => boolean | Promise<boolean>): WebSocketRouteConstructor {
+    public acceptReject(callback: (request: Request, response: WSResponse, app: Backendium) => AcceptResponseCallbackReturnType | Promise<AcceptResponseCallbackReturnType>): WebSocketRouteConstructor {
         this.acceptRejectFn = async (request: Request, response: WSResponse, app: Backendium) => {
-            let ans = callback(request, response, app);
-            if (ans instanceof Promise) return await ans;
-            return ans;
+            let ans = callback(request, response, app), data: AcceptResponseCallbackReturnType;
+            if (ans instanceof Promise) data = await ans;
+            else data = ans;
+            return typeof data === "boolean" ? [data, undefined, undefined] : [false, data[0], data[1]];
         };
         return this;
     }
