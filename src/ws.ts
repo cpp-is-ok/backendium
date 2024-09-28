@@ -4,7 +4,7 @@ import Backendium from "./index.js";
 import {EventEmitter, EventKey} from "event-emitter-typescript";
 import {ValidationError, Validator} from "checkeasy";
 import * as WebSocket from "ws";
-import {IncomingMessage, ClientRequest} from "node:http";
+import {ClientRequest, IncomingMessage} from "node:http";
 
 interface NextMessageOptions {
     timeout?: number | undefined;
@@ -26,13 +26,13 @@ export type WebSocketRouteConstructorEvents = {
     parsingFailed: [Buffer, BackendiumWebSocket, Backendium, Validator<any> | undefined],
     message: [Buffer, BackendiumWebSocket, Backendium, boolean],
     messageBeforeEvents: [Buffer, BackendiumWebSocket, Backendium, boolean],
-    close: [BackendiumWebSocket, number, Buffer],
-    error: [BackendiumWebSocket, Error],
-    upgrade: [BackendiumWebSocket, IncomingMessage],
-    open: [BackendiumWebSocket],
-    ping: [BackendiumWebSocket, Buffer],
-    pong: [BackendiumWebSocket, Buffer],
-    "unexpected-response": [BackendiumWebSocket, ClientRequest, IncomingMessage]
+    close: [BackendiumWebSocket, number, Buffer, Backendium],
+    error: [BackendiumWebSocket, Error, Backendium],
+    upgrade: [BackendiumWebSocket, IncomingMessage, Backendium],
+    open: [BackendiumWebSocket, Backendium],
+    ping: [BackendiumWebSocket, Buffer, Backendium],
+    pong: [BackendiumWebSocket, Buffer, Backendium],
+    "unexpected-response": [BackendiumWebSocket, ClientRequest, IncomingMessage, Backendium]
 };
 
 export type WebSocketEvents = {
@@ -71,6 +71,10 @@ export class WebSocketRouteConstructor {
     protected useEvents = false;
     protected acceptRejectFn: ((request: Request, response: WSResponse, app: Backendium) => Promise<[boolean, number | undefined, string | undefined]>) | undefined;
 
+    public static rawDataParse(data: WebSocket.RawData): Buffer {
+        return data instanceof Buffer ? data : data instanceof ArrayBuffer ? Buffer.from(data) : data.reduce((prev, cur) => Buffer.concat([prev, cur]), Buffer.alloc(0));
+    }
+
     public async _handle(request: Request, response: WSResponse, next: NextFunction, app: Backendium): Promise<void> {
         if (this.acceptRejectFn) {
             let [flag, code, message] = await this.acceptRejectFn(request, response, app);
@@ -82,7 +86,7 @@ export class WebSocketRouteConstructor {
         }
         let socket: BackendiumWebSocket = await response.accept();
         socket.on("message", (data, isBinary) => {
-            const buffer = data instanceof Buffer ? data : data instanceof ArrayBuffer ? Buffer.from(data) : data.reduce((prev, cur) => Buffer.concat([prev, cur]), Buffer.alloc(0));
+            let buffer = WebSocketRouteConstructor.rawDataParse(data);
             this.eventEmitter.emit("messageBeforeEvents", [buffer, socket, app, isBinary]);
             this.eventEmitter.emit("message", [buffer, socket, app, isBinary]);
         });
