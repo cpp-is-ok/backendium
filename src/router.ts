@@ -206,7 +206,16 @@ export class BackendiumRouter {
         return constructor;
     }
 
-    router(router: BackendiumRouter) {
-        this._handlers.push(...router._handlers);
+    protected static addPrefix([method, route, handler]: [MethodType, string | undefined, Array<(app: Backendium) => RequestHandler>], prefix: string): [MethodType, string, Array<(app: Backendium) => RequestHandler>];
+    protected static addPrefix([method, route, handler]: ["ws", string, Array<(app: Backendium) => WSRequestHandler>], prefix: string): ["ws", string, Array<(app: Backendium) => WSRequestHandler>];
+    protected static addPrefix([method, route, handler]: [MethodType, string | undefined, Array<(app: Backendium) => RequestHandler>] | ["ws", string, Array<(app: Backendium) => WSRequestHandler>], prefix: string) {
+        return [method, route || !route?.startsWith("/") ? prefix + ' ' + (route ?? "") : prefix + (route ?? ""), handler];
+    }
+
+    router(router: BackendiumRouter, routePrefix = "") {
+        this._handlers.push(...router._handlers.map((handler) => {
+            // @ts-ignore
+            return BackendiumRouter.addPrefix(handler, routePrefix)
+        }));
     }
 }
