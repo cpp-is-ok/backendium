@@ -106,10 +106,12 @@ export class BackendiumWebSocket {
                 this.wsConstructor.eventEmitter.emit("messageBeforeEvents", [buffer, this, app, isBinary]);
                 this.parseEventMessage(buffer, this, app, isBinary);
             }
+            else {
+                this.eventEmitter.emit("notEventMessage", [buffer, this, app, isBinary]);
+                this.wsConstructor.eventEmitter.emit("notEventMessage", [buffer, this, app, isBinary]);
+            }
             this.eventEmitter.emit("message", [buffer, this, app, isBinary]);
             this.wsConstructor.eventEmitter.emit("message", [buffer, this, app, isBinary]);
-            this.eventEmitter.emit("notEventMessage", [buffer, this, app, isBinary]);
-            this.wsConstructor.eventEmitter.emit("notEventMessage", [buffer, this, app, isBinary]);
         });
     }
 

@@ -22,7 +22,7 @@ export type BackendiumEvents = {
     start: [Server]
 };
 
-export default class Backendium extends BackendiumRouter {
+export default class Backendium<GlobalAuthType = any> extends BackendiumRouter<GlobalAuthType> {
     public express = new WebSocketExpress;
     protected eventEmitter = new EventEmitter<BackendiumEvents>
     public websocketOperations = new EventEmitter<WebSocketOperations>
