@@ -1,6 +1,7 @@
 import {Request} from "express";
 import Backendium from "./index.js";
 import {Validator} from "checkeasy";
+import BackendiumResponse from "./response";
 
 // export default class BackendiumRequest<BodyType, ParamsType, QueryType, HeadersType> {
 //     constructor(public expressRequest: Request, public app: Backendium, public validators: {bodyValidator: Validator<BodyType>,
@@ -17,19 +18,25 @@ export type ValidatorsType<BodyType, ParamsType, QueryType, HeadersType> = {
     headersValidator?: Validator<HeadersType>
 }
 
-export type BackendiumRequestOptionsType<BodyType, ParamsType, QueryType, HeadersType> = ValidatorsType<BodyType, ParamsType, QueryType, HeadersType> & {
+export type AuthCheckerType<AuthType> = (request: Request, response: BackendiumResponse, app: Backendium) => AuthType | null | Promise<AuthType | null>;
+export type AuthFailedType = (request: Request, response: BackendiumResponse, app: Backendium) => void;
 
+export type BackendiumRequestOptionsType<BodyType, ParamsType, QueryType, AuthType, HeadersType> = ValidatorsType<BodyType, ParamsType, QueryType, HeadersType> & {
+    auth: boolean,
+    authChecker?: AuthCheckerType<AuthType>,
+    authFailed?: AuthFailedType
 };
 
-export type BackendiumRequestType<BodyType, ParamsType, QueryType, HeadersType> = {
+export type BackendiumRequestType<BodyType, ParamsType, QueryType, AuthType, HeadersType> = {
     expressRequest: Request,
     body: BodyType,
     params: ParamsType,
     query: QueryType,
     headers: HeadersType,
     bodyBuffer: Buffer,
-    options: BackendiumRequestOptionsType<BodyType, ParamsType, QueryType, HeadersType>,
-    app: Backendium
+    options: BackendiumRequestOptionsType<BodyType, ParamsType, QueryType, AuthType, HeadersType>,
+    app: Backendium,
+    auth: AuthType
 }
 
 function parse<Type>(data: any, validator?: Validator<Type>): Type {
@@ -69,9 +76,9 @@ async function getBody(request: Request): Promise<Buffer> {
     });
 }
 
-export default async function parseRequest<BodyType, ParamsType, QueryType, HeadersType>(request: Request, app: Backendium,
-    {bodyValidator, paramsValidator, queryValidator, headersValidator}: BackendiumRequestOptionsType<BodyType, ParamsType, QueryType, HeadersType>
-): Promise<BackendiumRequestType<BodyType, ParamsType, QueryType, HeadersType> | undefined> {
+export default async function parseRequest<BodyType, ParamsType, QueryType, AuthType, HeadersType>(request: Request, app: Backendium,
+    {bodyValidator, paramsValidator, queryValidator, headersValidator, ...other}: BackendiumRequestOptionsType<BodyType, ParamsType, QueryType, AuthType, HeadersType>
+): Promise<Omit<BackendiumRequestType<BodyType, ParamsType, QueryType, AuthType, HeadersType>, "auth"> | undefined> {
     try {
         let bodyBuffer = await getBody(request);
         let body = parse(bodyBuffer.toString("utf8"), bodyValidator);
@@ -80,8 +87,8 @@ export default async function parseRequest<BodyType, ParamsType, QueryType, Head
         let headers = parse(request.headers, headersValidator);
         return {
             expressRequest: request, body, params, query, headers, bodyBuffer, app,
-            options: {bodyValidator, paramsValidator, queryValidator, headersValidator}
-        }
+            options: {bodyValidator, paramsValidator, queryValidator, headersValidator, ...other}
+        };
     }
     catch (error) {
         // @TODO
