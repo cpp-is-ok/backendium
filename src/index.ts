@@ -66,8 +66,12 @@ export default class Backendium extends BackendiumRouter {
             else this.addAnyRouteHandler(method, handlers.map(handler => handler(this)));
         });
         this.eventEmitter.emit("starting", []);
-        const server = this.express.createServer();
-        server.listen(this.config.port ?? 8080, this.config.host ?? "localhost", () => {
+        // const server = this.express.createServer();
+        // server.listen(this.config.port ?? 8080, this.config.host ?? "localhost", () => {
+        //     if (callback) callback(server);
+        //     this.eventEmitter.emit("start", [server]);
+        // });
+        const server = this.express.listen(this.config.port ?? 8080, this.config.host ?? "localhost", () => {
             if (callback) callback(server);
             this.eventEmitter.emit("start", [server]);
         });

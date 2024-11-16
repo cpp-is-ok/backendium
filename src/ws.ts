@@ -108,6 +108,8 @@ export class BackendiumWebSocket {
             }
             this.eventEmitter.emit("message", [buffer, this, app, isBinary]);
             this.wsConstructor.eventEmitter.emit("message", [buffer, this, app, isBinary]);
+            this.eventEmitter.emit("notEventMessage", [buffer, this, app, isBinary]);
+            this.wsConstructor.eventEmitter.emit("notEventMessage", [buffer, this, app, isBinary]);
         });
     }
 
@@ -161,7 +163,7 @@ export class BackendiumWebSocket {
         return typeof data === "string" ? data : data instanceof Buffer ? data.toString() : data === undefined ? "undefined" : (typeof data === "number" && isNaN(data)) ? "NaN" : JSON.stringify(data);
     }
 
-    emit(event: string, payload: any) {
+    emit(event: string, payload?: any) {
         BackendiumWebSocket.eventNameCheck(event);
         this.send(`$${event}\n${BackendiumWebSocket.AnyToString(payload)}`);
     }
@@ -210,7 +212,7 @@ export class WebSocketRouteConstructor {
     protected sockets: Array<BackendiumWebSocket> = []
     public eventEmitter = new EventEmitter<BackendiumWebSocketEvents>;
     protected acceptRejectFn: ((request: Request, response: WSResponse, app: Backendium) => Promise<[boolean, number | undefined, string | undefined]>) | undefined;
-    private eventHandlers: Array<[string, (data: any, socket: BackendiumWebSocket, app: Backendium, validator: Validator<any>) => void, Validator<any> | undefined]> = []
+    protected eventHandlers: Array<[string, (data: any, socket: BackendiumWebSocket, app: Backendium, validator: Validator<any>) => void, Validator<any> | undefined]> = []
     protected operations = new EventEmitter<WebSocketOperations>;
 
     public async _handle(request: Request, response: WSResponse, next: NextFunction, app: Backendium): Promise<void> {
