@@ -22,12 +22,12 @@ export type AuthCheckerType<AuthType> = (request: Request, response: BackendiumR
 export type AuthFailedType = (request: Request, response: BackendiumResponse, app: Backendium) => void;
 
 export type BackendiumRequestOptionsType<BodyType, ParamsType, QueryType, AuthType, HeadersType> = ValidatorsType<BodyType, ParamsType, QueryType, HeadersType> & {
-    auth: boolean,
+    auth?: boolean,
     authChecker?: AuthCheckerType<AuthType>,
     authFailed?: AuthFailedType
 };
 
-export type BackendiumRequestType<BodyType, ParamsType, QueryType, AuthType, HeadersType> = {
+export type BackendiumRequestType<BodyType, ParamsType, QueryType, AuthType, HeadersType, DefaultAuthType> = {
     expressRequest: Request,
     body: BodyType,
     params: ParamsType,
@@ -36,7 +36,8 @@ export type BackendiumRequestType<BodyType, ParamsType, QueryType, AuthType, Hea
     bodyBuffer: Buffer,
     options: BackendiumRequestOptionsType<BodyType, ParamsType, QueryType, AuthType, HeadersType>,
     app: Backendium,
-    auth: AuthType
+    auth: AuthType,
+    globalAuth: DefaultAuthType
 }
 
 function parse<Type>(data: any, validator?: Validator<Type>): Type {
@@ -67,7 +68,7 @@ function parse<Type>(data: any, validator?: Validator<Type>): Type {
 async function getBody(request: Request): Promise<Buffer> {
     if (request.body) return request.body;
     return new Promise(resolve => {
-        let buffer = new Buffer("");
+        let buffer = Buffer.alloc(0);
         request.on("data", chunk => buffer = Buffer.concat([buffer, chunk]));
         request.on("end", () => {
             request.body = buffer;
@@ -78,7 +79,7 @@ async function getBody(request: Request): Promise<Buffer> {
 
 export default async function parseRequest<BodyType, ParamsType, QueryType, AuthType, HeadersType>(request: Request, app: Backendium,
     {bodyValidator, paramsValidator, queryValidator, headersValidator, ...other}: BackendiumRequestOptionsType<BodyType, ParamsType, QueryType, AuthType, HeadersType>
-): Promise<Omit<BackendiumRequestType<BodyType, ParamsType, QueryType, AuthType, HeadersType>, "auth"> | undefined> {
+): Promise<Omit<Omit<BackendiumRequestType<BodyType, ParamsType, QueryType, AuthType, HeadersType, any>, "auth">, "globalAuth"> | undefined> {
     try {
         let bodyBuffer = await getBody(request);
         let body = parse(bodyBuffer.toString("utf8"), bodyValidator);

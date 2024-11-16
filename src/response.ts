@@ -8,8 +8,8 @@ export default class BackendiumResponse {
         this.expressResponse.status(status);
     }
 
-    end(data: any, status?: number) {
+    end(data?: any, status?: number) {
         if (status) this.expressResponse.status(status);
-        this.expressResponse.end(data instanceof String || data instanceof Buffer || data instanceof ArrayBuffer ? data : JSON.stringify(data));
+        this.expressResponse.end(typeof data === "string" || data instanceof Buffer || data instanceof ArrayBuffer ? data : JSON.stringify(data));
     }
 }
