@@ -35,7 +35,7 @@ export type BackendiumWebSocketEvents<InitDataType> = {
     close: [BackendiumWebSocket<InitDataType>, number, Buffer, Backendium],
     error: [BackendiumWebSocket<InitDataType>, Error, Backendium],
     init: [WebSocket & WebSocketExtension, any, Backendium],
-    upgrade: [BackendiumWebSocket<InitDataType>, IncomingMessage, Backendium], // @TODO
+    upgrade: [BackendiumWebSocket<InitDataType>, IncomingMessage, Backendium],
     open: [BackendiumWebSocket<InitDataType>, Backendium],
     ping: [BackendiumWebSocket<InitDataType>, Buffer, Backendium],
     pong: [BackendiumWebSocket<InitDataType>, Buffer, Backendium],
@@ -112,6 +112,26 @@ export class BackendiumWebSocket<InitDataType> {
             }
             this.eventEmitter.emit("message", [buffer, this, app, isBinary]);
             this.wsConstructor.eventEmitter.emit("message", [buffer, this, app, isBinary]);
+        });
+        socket.on("upgrade", (request) => {
+            this.eventEmitter.emit("upgrade", [this, request, app]);
+            this.wsConstructor.eventEmitter.emit("upgrade", [this, request, app]);
+        });
+        socket.on("open", () => {
+            this.eventEmitter.emit("open", [this, app]);
+            this.wsConstructor.eventEmitter.emit("open", [this, app]);
+        });
+        socket.on("ping", (buffer) => {
+            this.eventEmitter.emit("ping", [this, buffer, app]);
+            this.wsConstructor.eventEmitter.emit("ping", [this, buffer, app]);
+        });
+        socket.on("pong", (buffer) => {
+            this.eventEmitter.emit("pong", [this, buffer, app]);
+            this.wsConstructor.eventEmitter.emit("pong", [this, buffer, app]);
+        });
+        socket.on("unexpected-response", (clientResponse, request) => {
+            this.eventEmitter.emit("unexpectedResponse", [this, clientResponse, request, app]);
+            this.wsConstructor.eventEmitter.emit("unexpectedResponse", [this, clientResponse, request, app]);
         });
     }
 
@@ -305,3 +325,6 @@ export class WebSocketRouteConstructor<InitDataType> {
         });
     }
 }
+
+// @TODO logging
+// @TODO error handling
