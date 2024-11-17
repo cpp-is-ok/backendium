@@ -1,20 +1,33 @@
-import {RequestHandler} from "express";
+import {Request, RequestHandler} from "express";
 import {Server} from "node:http";
 import {BackendiumRouter, MethodType} from "./router.js";
 import {EventEmitter, EventKey} from "event-emitter-typescript";
 import {WebSocketExpress, WSRequestHandler} from "websocket-express";
-import {WebSocketOperations} from "./ws.js";
+import {BackendiumWebSocket, WebSocketOperations} from "./ws.js";
+import Logger from "./logger";
+import BackendiumResponse from "./response";
+import {ValidationError} from "checkeasy";
 
 export type BackendiumConfigType = {
     port: number,
     host: string,
     name: string,
-    version: string,
-    logging: {}, // @TODO
+    version: string | number,
+    logging: {
+        path?: string,
+        fullRequest?: boolean,
+        replaceConsoleLog?: boolean
+    }
     autoLogFull: boolean,
     autoLog: boolean,
     autoLogWsFull: boolean,
-    autoLogWs: boolean
+    autoLogWs: boolean,
+    errorMessage: string,
+    errorHandler(request: Request, response: BackendiumResponse, data: any, app: Backendium, error: any, message?: string): void,
+    validationErrorMessage: string,
+    validationErrorHandler(request: Request, response: BackendiumResponse, app: Backendium, data: Buffer, error: ValidationError, message?: string): void,
+    wsErrorMessage: string,
+    wsErrorHandler(data: Buffer, connection: BackendiumWebSocket, app: Backendium, error: any): void
 }
 
 export type BackendiumEvents = {
@@ -24,11 +37,24 @@ export type BackendiumEvents = {
 
 export default class Backendium<GlobalAuthType = any> extends BackendiumRouter<GlobalAuthType> {
     public express = new WebSocketExpress;
-    protected eventEmitter = new EventEmitter<BackendiumEvents>
-    public websocketOperations = new EventEmitter<WebSocketOperations>
+    protected eventEmitter = new EventEmitter<BackendiumEvents>;
+    public websocketOperations = new EventEmitter<WebSocketOperations>;
+    public logger = new Logger(console.log.bind(console));
+    protected config_: Partial<BackendiumConfigType> = {};
 
-    constructor(public config: Partial<BackendiumConfigType> = {}) {
+    constructor(config: Partial<BackendiumConfigType> = {}) {
         super();
+        this.config = config;
+    }
+
+    get config() {return this.config_;}
+    set config(config) {
+        this.config_ = {...this.config_, ...config, logging: {...this.config_.logging, ...config.logging}};
+        if (this.config_.logging?.path) this.logger.path = this.config_.logging?.path;
+        if (this.config_.logging?.replaceConsoleLog ?? true) {
+            console.log = this.logger.log;
+            console.error = this.logger.error;
+        }
     }
     
     protected addAnyRouteHandler(method: MethodType, handlers: Array<RequestHandler>) {
@@ -71,7 +97,8 @@ export default class Backendium<GlobalAuthType = any> extends BackendiumRouter<G
         //     if (callback) callback(server);
         //     this.eventEmitter.emit("start", [server]);
         // });
-        const server = this.express.listen(this.config.port ?? 8080, this.config.host ?? "localhost", () => {
+        const server = this.express.listen(this.config_.port ?? 8080, this.config_.host ?? "localhost", () => {
+            this.logger.initMessage(this.config_.name ?? "app", this.config_.version ?? "0.0.0", this.config.port ?? 8080, this.config_.host ?? "localhost");
             if (callback) callback(server);
             this.eventEmitter.emit("start", [server]);
         });

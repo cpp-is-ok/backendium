@@ -8,6 +8,7 @@
     "prepack": "tsc"
   },
   "dependencies": {
+    "chalk": "^5.3.0",
     "checkeasy": "^1.2.1",
     "event-emitter-typescript": "^2.1.1",
     "express": "^4.21.0",
