@@ -29,7 +29,7 @@ export default class Logger {
     }
 
     getPrefix(tag: string) {
-        return `${getDate()}: ${tag}:`;
+        return `[${getDate()}] ${tag}:`;
     }
 
     Log(tag: string, func = chalk.white, ...data: Array<any>) {
