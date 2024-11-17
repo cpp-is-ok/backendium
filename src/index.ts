@@ -27,7 +27,7 @@ export type BackendiumConfigType = {
     validationErrorMessage: string,
     validationErrorHandler(request: Request, response: BackendiumResponse, app: Backendium, data: Buffer, error: ValidationError, message?: string): void,
     wsErrorMessage: string,
-    wsErrorHandler(data: Buffer, connection: BackendiumWebSocket, app: Backendium, error: any): void
+    wsErrorHandler(data: Buffer, connection: BackendiumWebSocket<any>, app: Backendium, error: any): void
 }
 
 export type BackendiumEvents = {
@@ -38,7 +38,6 @@ export type BackendiumEvents = {
 export default class Backendium<GlobalAuthType = any> extends BackendiumRouter<GlobalAuthType> {
     public express = new WebSocketExpress;
     protected eventEmitter = new EventEmitter<BackendiumEvents>;
-    public websocketOperations = new EventEmitter<WebSocketOperations>;
     public logger = new Logger(console.log.bind(console));
     protected config_: Partial<BackendiumConfigType> = {};
 
@@ -79,10 +78,6 @@ export default class Backendium<GlobalAuthType = any> extends BackendiumRouter<G
 
     public off<E extends EventKey<BackendiumEvents>>(event: E, subscriber: (...args: BackendiumEvents[E]) => void): void {
         this.eventEmitter.off(event, (args) => subscriber(...args));
-    };
-
-    public websocketOperation<E extends EventKey<WebSocketOperations>>(event: E, subscriber: (...args: WebSocketOperations[E]) => void): () => void {
-        return this.websocketOperations.on(event, (args) => subscriber(...args));
     };
 
     public start(callback?: (server: Server) => void): Server {

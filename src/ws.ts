@@ -22,37 +22,38 @@ interface WebSocketExtension {
 export type WebSocketHeadEventType = {event: string};
 export type WebSocketHeadType = WebSocketHeadEventType | {operation: string, operationConfig: string};
 
-export type BackendiumWebSocketEvents = {
-    notEventMessage: [Buffer, BackendiumWebSocket, Backendium, boolean],
-    unknownEvent: [Buffer, BackendiumWebSocket, Backendium, WebSocketHeadEventType],
-    parsingFailed: [Buffer, BackendiumWebSocket, Backendium, Validator<any> | undefined],
-    accept: [BackendiumWebSocket, WebSocketRouteConstructor, Backendium],
+export type BackendiumWebSocketEvents<InitDataType> = {
+    notEventMessage: [Buffer, BackendiumWebSocket<InitDataType>, Backendium, boolean],
+    unknownEvent: [Buffer, BackendiumWebSocket<InitDataType>, Backendium, WebSocketHeadEventType],
+    parsingFailed: [Buffer, BackendiumWebSocket<InitDataType>, Backendium, Validator<any> | undefined],
+    initParsingFailed: [Buffer, WebSocket & WebSocketExtension, Backendium, Validator<any> | undefined],
+    initFailed: [Buffer, WebSocket & WebSocketExtension, Backendium],
+    accept: [BackendiumWebSocket<InitDataType>, WebSocketRouteConstructor<InitDataType>, Backendium],
     reject: [Request, WSResponse, Backendium, number | undefined, string | undefined],
-    message: [Buffer, BackendiumWebSocket, Backendium, boolean],
-    messageBeforeEvents: [Buffer, BackendiumWebSocket, Backendium, boolean],
-    close: [BackendiumWebSocket, number, Buffer, Backendium],
-    error: [BackendiumWebSocket, Error, Backendium],
-    upgrade: [BackendiumWebSocket, IncomingMessage, Backendium], // @TODO
-    open: [BackendiumWebSocket, Backendium],
-    ping: [BackendiumWebSocket, Buffer, Backendium],
-    pong: [BackendiumWebSocket, Buffer, Backendium],
-    unexpectedResponse: [BackendiumWebSocket, ClientRequest, IncomingMessage, Backendium]
+    message: [Buffer, BackendiumWebSocket<InitDataType>, Backendium, boolean],
+    messageBeforeEvents: [Buffer, BackendiumWebSocket<InitDataType>, Backendium, boolean],
+    close: [BackendiumWebSocket<InitDataType>, number, Buffer, Backendium],
+    error: [BackendiumWebSocket<InitDataType>, Error, Backendium],
+    init: [WebSocket & WebSocketExtension, any, Backendium],
+    upgrade: [BackendiumWebSocket<InitDataType>, IncomingMessage, Backendium], // @TODO
+    open: [BackendiumWebSocket<InitDataType>, Backendium],
+    ping: [BackendiumWebSocket<InitDataType>, Buffer, Backendium],
+    pong: [BackendiumWebSocket<InitDataType>, Buffer, Backendium],
+    unexpectedResponse: [BackendiumWebSocket<InitDataType>, ClientRequest, IncomingMessage, Backendium]
 }
 
-// export type BackendiumWebSocket = WebSocket & WebSocketExtension;
-
-export class BackendiumWebSocket {
-    protected eventEmitter = new EventEmitter<BackendiumWebSocketEvents>;
-    protected wsEventEmitter = new EventEmitter<WebSocketEvents>;
+export class BackendiumWebSocket<InitDataType> {
+    protected eventEmitter = new EventEmitter<BackendiumWebSocketEvents<InitDataType>>;
+    protected wsEventEmitter = new EventEmitter<WebSocketEvents<InitDataType>>;
     protected events = new Set<string>;
-    protected operations = new EventEmitter<WebSocketOperations>;
+    protected operations = new EventEmitter<WebSocketOperations<InitDataType>>;
     protected useEvents = false;
 
     public static rawDataParse(data: WebSocket.RawData): Buffer {
         return data instanceof Buffer ? data : data instanceof ArrayBuffer ? Buffer.from(data) : data.reduce((prev, cur) => Buffer.concat([prev, cur]), Buffer.alloc(0));
     }
 
-    protected parseEventHead(head: string, message: Buffer, socket: BackendiumWebSocket, app: Backendium): WebSocketHeadType | undefined {
+    protected parseEventHead(head: string, message: Buffer, socket: BackendiumWebSocket<InitDataType>, app: Backendium): WebSocketHeadType | undefined {
         if (head.length < 1 || !head.startsWith("$")) {
             this.eventEmitter.emit("notEventMessage", [message, socket, app, false]);
             this.wsConstructor.eventEmitter.emit("notEventMessage", [message, socket, app, false]);
@@ -64,7 +65,7 @@ export class BackendiumWebSocket {
         return {operation: operation.trim(), operationConfig: operationConfig.join('$').trim()};
     }
 
-    protected emitIncomingEvent(event: string, payload: Buffer, socket: BackendiumWebSocket, app: Backendium, head: WebSocketHeadEventType) {
+    protected emitIncomingEvent(event: string, payload: Buffer, socket: BackendiumWebSocket<InitDataType>, app: Backendium, head: WebSocketHeadEventType) {
         if (this.events.has(event)) this.wsEventEmitter.emit(event, [payload, socket, app]);
         else {
             this.eventEmitter.emit("unknownEvent", [payload, socket, app, head]);
@@ -72,12 +73,11 @@ export class BackendiumWebSocket {
         }
     }
 
-    protected emitIncomingOperation(operation: string, payload: Buffer, operationConfig: string, socket: BackendiumWebSocket, app: Backendium) {
-        app.websocketOperations.emit(operation, [payload, operationConfig, socket, app]);
+    protected emitIncomingOperation(operation: string, payload: Buffer, operationConfig: string, socket: BackendiumWebSocket<InitDataType>, app: Backendium) {
         this.operations.emit(operation, [payload, operationConfig, socket, app]);
     }
 
-    protected parseEventMessage(message: Buffer, socket: BackendiumWebSocket, app: Backendium, isBinary: boolean): void {
+    protected parseEventMessage(message: Buffer, socket: BackendiumWebSocket<InitDataType>, app: Backendium, isBinary: boolean): void {
         if (isBinary) {
             this.eventEmitter.emit("notEventMessage", [message, socket, app, isBinary]);
             this.wsConstructor.eventEmitter.emit("notEventMessage", [message, socket, app, isBinary]);
@@ -96,7 +96,7 @@ export class BackendiumWebSocket {
         }
     }
 
-    constructor(public socket: WebSocket & WebSocketExtension, public wsConstructor: WebSocketRouteConstructor, app: Backendium) {
+    constructor(public socket: WebSocket & WebSocketExtension, public wsConstructor: WebSocketRouteConstructor<InitDataType>, app: Backendium, public initData: InitDataType) {
         this.eventEmitter.emit("accept", [this, this.wsConstructor, app]);
         this.wsConstructor.eventEmitter.emit("accept", [this, this.wsConstructor, app]);
         socket.on("message", (data, isBinary) => {
@@ -119,10 +119,10 @@ export class BackendiumWebSocket {
         if (str.includes("$")) throw new Error("event name cannot contain '$'");
     }
 
-    public event<Type extends Buffer>(event: string, callback: (data: Type, socket: BackendiumWebSocket, app: Backendium) => void): void;
-    public event<Type>(event: string, callback: (data: Type, socket: BackendiumWebSocket, app: Backendium, validator: Validator<Type>) => void, validator: Validator<Type>): void;
+    public event<Type extends Buffer>(event: string, callback: (data: Type, socket: BackendiumWebSocket<InitDataType>, app: Backendium) => void): void;
+    public event<Type>(event: string, callback: (data: Type, socket: BackendiumWebSocket<InitDataType>, app: Backendium, validator: Validator<Type>) => void, validator: Validator<Type>): void;
 
-    public event<Type>(event: string, callback: (data: Type, socket: BackendiumWebSocket, app: Backendium, validator: Validator<Type>) => void, validator?: Validator<Type>): void {
+    public event<Type>(event: string, callback: (data: Type, socket: BackendiumWebSocket<InitDataType>, app: Backendium, validator: Validator<Type>) => void, validator?: Validator<Type>): void {
         this.useEvents = true;
         event = event.trim();
         BackendiumWebSocket.eventNameCheck(event);
@@ -139,20 +139,20 @@ export class BackendiumWebSocket {
         });
     }
 
-    public operation<E extends EventKey<WebSocketOperations>>(event: E, subscriber: (...args: WebSocketOperations[E]) => void): void {
+    public operation<E extends EventKey<WebSocketOperations<InitDataType>>>(event: E, subscriber: (...args: WebSocketOperations<InitDataType>[E]) => void): void {
         BackendiumWebSocket.eventNameCheck(event);
         this.operations.on(event, (args) => subscriber(...args));
     };
 
-    public on<E extends EventKey<BackendiumWebSocketEvents>>(event: E, subscriber: (...args: BackendiumWebSocketEvents[E]) => void): () => void {
+    public on<E extends EventKey<BackendiumWebSocketEvents<InitDataType>>>(event: E, subscriber: (...args: BackendiumWebSocketEvents<InitDataType>[E]) => void): () => void {
         return this.eventEmitter.on(event, (args) => subscriber(...args));
     };
 
-    public once<E extends EventKey<BackendiumWebSocketEvents>>(event: E, subscriber: (...args: BackendiumWebSocketEvents[E]) => void): () => void {
+    public once<E extends EventKey<BackendiumWebSocketEvents<InitDataType>>>(event: E, subscriber: (...args: BackendiumWebSocketEvents<InitDataType>[E]) => void): () => void {
         return this.eventEmitter.once(event, (args) => subscriber(...args));
     };
 
-    public off<E extends EventKey<BackendiumWebSocketEvents>>(event: E, subscriber: (...args: BackendiumWebSocketEvents[E]) => void): void {
+    public off<E extends EventKey<BackendiumWebSocketEvents<InitDataType>>>(event: E, subscriber: (...args: BackendiumWebSocketEvents<InitDataType>[E]) => void): void {
         this.eventEmitter.off(event, (args) => subscriber(...args));
     };
 
@@ -176,12 +176,12 @@ export class BackendiumWebSocket {
     }
 }
 
-export type WebSocketEvents = {
-    [key: string]: [Buffer, BackendiumWebSocket, Backendium];
+export type WebSocketEvents<InitDataType> = {
+    [key: string]: [Buffer, BackendiumWebSocket<InitDataType>, Backendium];
 };
 
-export type WebSocketOperations = {
-    [key: string]: [Buffer, string, BackendiumWebSocket, Backendium];
+export type WebSocketOperations<InitDataType> = {
+    [key: string]: [Buffer, string, BackendiumWebSocket<InitDataType>, Backendium];
 };
 
 const bufferValidator: Validator<Buffer> = (value: any, path: string) => {
@@ -210,12 +210,19 @@ function parse<Type>(data: Buffer, validator: Validator<Type>): [Type, true] | [
 
 export type AcceptResponseCallbackReturnType = boolean | [number | undefined] | [number | undefined, string | undefined];
 
-export class WebSocketRouteConstructor {
-    protected sockets: Array<BackendiumWebSocket> = []
-    public eventEmitter = new EventEmitter<BackendiumWebSocketEvents>;
+export class WebSocketRouteConstructor<InitDataType> {
+    protected sockets: Array<BackendiumWebSocket<InitDataType>> = []
+    public eventEmitter = new EventEmitter<BackendiumWebSocketEvents<InitDataType>>;
     protected acceptRejectFn: ((request: Request, response: WSResponse, app: Backendium) => Promise<[boolean, number | undefined, string | undefined]>) | undefined;
-    protected eventHandlers: Array<[string, (data: any, socket: BackendiumWebSocket, app: Backendium, validator: Validator<any>) => void, Validator<any> | undefined]> = []
-    protected operations = new EventEmitter<WebSocketOperations>;
+    protected eventHandlers: Array<[string, (data: any, socket: BackendiumWebSocket<InitDataType>, app: Backendium, validator: Validator<any>) => void, Validator<any> | undefined]> = []
+    protected operations = new EventEmitter<WebSocketOperations<InitDataType>>;
+    protected initRequired = false;
+
+    protected _backendiumWebsocket(socket: WebSocket & WebSocketExtension, app: Backendium, initData: InitDataType) {
+        let backendiumSocket = new BackendiumWebSocket<InitDataType>(socket, this, app, initData);
+        // @ts-ignore
+        this.eventHandlers.forEach(([event, socket, validator]) => backendiumSocket.event(event, socket, validator));
+    }
 
     public async _handle(request: Request, response: WSResponse, next: NextFunction, app: Backendium): Promise<void> {
         if (this.acceptRejectFn) {
@@ -226,12 +233,15 @@ export class WebSocketRouteConstructor {
                 return;
             }
         }
-        let socket = await response.accept(), backendiumSocket = new BackendiumWebSocket(socket, this, app);
+        let socket = await response.accept();
+        if (this.initRequired) {
+
+        }
         // @ts-ignore
-        this.eventHandlers.forEach(([event, socket, validator]) => backendiumSocket.event(event, socket, validator));
+        else this._backendiumWebsocket(socket, app, undefined);
     }
 
-    public acceptReject(callback: (request: Request, response: WSResponse, app: Backendium) => AcceptResponseCallbackReturnType | Promise<AcceptResponseCallbackReturnType>): WebSocketRouteConstructor {
+    public acceptReject(callback: (request: Request, response: WSResponse, app: Backendium) => AcceptResponseCallbackReturnType | Promise<AcceptResponseCallbackReturnType>): WebSocketRouteConstructor<InitDataType> {
         this.acceptRejectFn = async (request: Request, response: WSResponse, app: Backendium) => {
             let ans = callback(request, response, app), data: AcceptResponseCallbackReturnType;
             if (ans instanceof Promise) data = await ans;
@@ -241,10 +251,10 @@ export class WebSocketRouteConstructor {
         return this;
     }
 
-    public event<Type extends Buffer>(event: string, callback: (data: Type, socket: BackendiumWebSocket, app: Backendium) => void): WebSocketRouteConstructor;
-    public event<Type>(event: string, callback: (data: Type, socket: BackendiumWebSocket, app: Backendium, validator: Validator<Type>) => void, validator: Validator<Type>): WebSocketRouteConstructor;
+    public event<Type extends Buffer>(event: string, callback: (data: Type, socket: BackendiumWebSocket<InitDataType>, app: Backendium) => void): WebSocketRouteConstructor<InitDataType>;
+    public event<Type>(event: string, callback: (data: Type, socket: BackendiumWebSocket<InitDataType>, app: Backendium, validator: Validator<Type>) => void, validator: Validator<Type>): WebSocketRouteConstructor<InitDataType>;
 
-    public event<Type>(event: string, callback: (data: Type, socket: BackendiumWebSocket, app: Backendium, validator: Validator<Type>) => void, validator?: Validator<Type>): WebSocketRouteConstructor {
+    public event<Type>(event: string, callback: (data: Type, socket: BackendiumWebSocket<InitDataType>, app: Backendium, validator: Validator<Type>) => void, validator?: Validator<Type>): WebSocketRouteConstructor<InitDataType> {
         BackendiumWebSocket.eventNameCheck(event);
         // @ts-ignore
         this.sockets.forEach(socket => socket.event(event, callback, validator));
@@ -252,33 +262,46 @@ export class WebSocketRouteConstructor {
         return this;
     }
 
-    public operation<E extends EventKey<WebSocketOperations>>(event: E, subscriber: (...args: WebSocketOperations[E]) => void): void {
+    public operation<E extends EventKey<WebSocketOperations<InitDataType>>>(event: E, subscriber: (...args: WebSocketOperations<InitDataType>[E]) => void): void {
         BackendiumWebSocket.eventNameCheck(event);
         this.operations.on(event, (args) => subscriber(...args));
-    };
+    }
 
-    public on_<E extends EventKey<BackendiumWebSocketEvents>>(event: E, subscriber: (...args: BackendiumWebSocketEvents[E]) => void): () => void {
+    public on_<E extends EventKey<BackendiumWebSocketEvents<InitDataType>>>(event: E, subscriber: (...args: BackendiumWebSocketEvents<InitDataType>[E]) => void): () => void {
         return this.eventEmitter.on(event, (args) => subscriber(...args));
-    };
+    }
 
-    public once_<E extends EventKey<BackendiumWebSocketEvents>>(event: E, subscriber: (...args: BackendiumWebSocketEvents[E]) => void): () => void {
+    public once_<E extends EventKey<BackendiumWebSocketEvents<InitDataType>>>(event: E, subscriber: (...args: BackendiumWebSocketEvents<InitDataType>[E]) => void): () => void {
         return this.eventEmitter.once(event, (args) => subscriber(...args));
-    };
+    }
 
-    public on<E extends EventKey<BackendiumWebSocketEvents>>(event: E, subscriber: (...args: BackendiumWebSocketEvents[E]) => void): WebSocketRouteConstructor {
+    public on<E extends EventKey<BackendiumWebSocketEvents<InitDataType>>>(event: E, subscriber: (...args: BackendiumWebSocketEvents<InitDataType>[E]) => void): WebSocketRouteConstructor<InitDataType> {
         this.eventEmitter.on(event, (args) => subscriber(...args));
         return this;
-    };
+    }
 
-    public once<E extends EventKey<BackendiumWebSocketEvents>>(event: E, subscriber: (...args: BackendiumWebSocketEvents[E]) => void): WebSocketRouteConstructor {
+    public once<E extends EventKey<BackendiumWebSocketEvents<InitDataType>>>(event: E, subscriber: (...args: BackendiumWebSocketEvents<InitDataType>[E]) => void): WebSocketRouteConstructor<InitDataType> {
         this.eventEmitter.once(event, (args) => subscriber(...args));
         return this;
-    };
+    }
 
-    public off<E extends EventKey<BackendiumWebSocketEvents>>(event: E, subscriber: (...args: BackendiumWebSocketEvents[E]) => void): WebSocketRouteConstructor {
+    public off<E extends EventKey<BackendiumWebSocketEvents<InitDataType>>>(event: E, subscriber: (...args: BackendiumWebSocketEvents<InitDataType>[E]) => void): WebSocketRouteConstructor<InitDataType> {
         this.eventEmitter.off(event, (args) => subscriber(...args));
         return this;
-    };
+    }
+    
+    public requireInit<Type>(callback: (connection: WebSocket & WebSocketExtension, data: Type, app: Backendium) => null | InitDataType | Promise<null | InitDataType>, validator: Validator<Type>) {
+        this.initRequired = true;
+        this.on("init", async (socket: WebSocket & WebSocketExtension, data: any, app: Backendium) => {
+            let [mainData, parsed] = validator ? parse(data, validator) : [data, true];
+            if (!parsed || !mainData) {
+                this.eventEmitter.emit("initParsingFailed", [data, socket, app, validator]);
+                return;
+            }
+            let ret = callback(socket, mainData, app);
+            if (ret instanceof Promise) ret = await ret;
+            if (ret !== null) this._backendiumWebsocket(socket, app, ret);
+            else this.eventEmitter.emit("initFailed", [data, socket, app]);
+        });
+    }
 }
-
-// @TODO init operation

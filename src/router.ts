@@ -200,8 +200,8 @@ export class BackendiumRouter<GlobalAuthType = undefined> {
         this.addHandler("unlink", ...args);
     }
 
-    ws(route: string): WebSocketRouteConstructor {
-        const constructor = new WebSocketRouteConstructor();
+    ws<InitDataType>(route: string): WebSocketRouteConstructor<InitDataType> {
+        const constructor = new WebSocketRouteConstructor<InitDataType>();
         this._handlers.push(["ws", route, [(app: Backendium) => (request: Request, response: WSResponse, next: NextFunction) => {
             constructor._handle(request, response, next, app);
         }]]);
