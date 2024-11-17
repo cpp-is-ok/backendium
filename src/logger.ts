@@ -42,6 +42,10 @@ export default class Logger {
         return this.Log("info", chalk.white, ...data);
     }
 
+    info(...data: Array<any>) {
+        return this.Log("info", chalk.white, ...data);
+    }
+
     success(...data: Array<any>) {
         return this.Log("success", chalk.green, ...data);
     }

@@ -52,8 +52,8 @@ export default class Backendium<GlobalAuthType = any> extends BackendiumRouter<G
         this.config_ = {...this.config_, ...config, logging: {...this.config_.logging, ...config.logging}};
         if (this.config_.logging?.path) this.logger.path = this.config_.logging?.path;
         if (this.config_.logging?.replaceConsoleLog ?? true) {
-            console.log = this.logger.log;
-            console.error = this.logger.error;
+            console.log = this.logger.message.bind(this.logger);
+            console.error = this.logger.error.bind(this.logger);
         }
     }
     
