@@ -36,18 +36,18 @@ export type BackendiumRequestType<BodyType, ParamsType, QueryType, AuthType, Hea
     globalAuth: DefaultAuthType
 }
 
-function parse<Type>(data: any, validator?: Validator<Type>): Type {
+function parse<Type>(data: Buffer | object, validator?: Validator<Type>, root: string = ""): Type {
     if (!validator) {
         // @ts-ignore
         return data;
     }
     try {
-        return validator(data, "");
+        return validator(data, root);
     }
     catch (error0) {
-        if (typeof data === "string") {
+        if (Buffer.isBuffer(data)) {
             try {
-                return validator(JSON.parse(data), "");
+                return validator(JSON.parse(data.toString()), root);
             }
             catch (error) {
                 if (error instanceof ValidationError) throw error;
@@ -75,7 +75,7 @@ export default async function parseRequest<BodyType, ParamsType, QueryType, Auth
 ): Promise<Omit<Omit<BackendiumRequestType<BodyType, ParamsType, QueryType, AuthType, HeadersType, any>, "auth">, "globalAuth"> | [Buffer, ValidationError]> {
     let bodyBuffer = await getBody(request);
     try {
-        let body = parse(bodyBuffer.toString("utf8"), bodyValidator);
+        let body = parse(bodyBuffer, bodyValidator);
         let params = parse(request.params, paramsValidator);
         let query = parse(request.query, queryValidator);
         let headers = parse(request.headers, headersValidator);

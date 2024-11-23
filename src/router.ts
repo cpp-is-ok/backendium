@@ -45,157 +45,157 @@ export class BackendiumRouter<GlobalAuthType = undefined> {
         this._handlers.push([method, route, handlers.map(handler => handler(this))]);
     }
 
-    use<BodyType = undefined, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
+    use<BodyType = Buffer, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
     ): void {
         this.addHandler("use", ...args);
     }
 
-    useHTTP<BodyType = undefined, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
+    useHTTP<BodyType = Buffer, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
     ): void {
         this.addHandler("useHTTP", ...args);
     }
 
-    all<BodyType = undefined, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
+    all<BodyType = Buffer, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
     ): void {
         this.addHandler("all", ...args);
     }
 
-    get<BodyType = undefined, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
+    get<BodyType = Buffer, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
     ): void {
         this.addHandler("get", ...args);
     }
 
-    post<BodyType = undefined, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
+    post<BodyType = Buffer, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
     ): void {
         this.addHandler("post", ...args);
     }
 
-    put<BodyType = undefined, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
+    put<BodyType = Buffer, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
     ): void {
         this.addHandler("put", ...args);
     }
 
-    delete<BodyType = undefined, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
+    delete<BodyType = Buffer, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
     ): void {
         this.addHandler("delete", ...args);
     }
 
-    patch<BodyType = undefined, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
+    patch<BodyType = Buffer, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
     ): void {
         this.addHandler("patch", ...args);
     }
 
-    options<BodyType = undefined, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
+    options<BodyType = Buffer, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
     ): void {
         this.addHandler("options", ...args);
     }
 
-    head<BodyType = undefined, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
+    head<BodyType = Buffer, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
     ): void {
         this.addHandler("head", ...args);
     }
 
-    checkout<BodyType = undefined, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
+    checkout<BodyType = Buffer, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
     ): void {
         this.addHandler("checkout", ...args);
     }
 
-    connect<BodyType = undefined, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
+    connect<BodyType = Buffer, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
     ): void {
         this.addHandler("connect", ...args);
     }
 
-    copy<BodyType = undefined, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
+    copy<BodyType = Buffer, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
     ): void {
         this.addHandler("copy", ...args);
     }
 
-    lock<BodyType = undefined, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
+    lock<BodyType = Buffer, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
     ): void {
         this.addHandler("lock", ...args);
     }
 
-    merge<BodyType = undefined, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
+    merge<BodyType = Buffer, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
     ): void {
         this.addHandler("merge", ...args);
     }
 
-    mkactivity<BodyType = undefined, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
+    mkactivity<BodyType = Buffer, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
     ): void {
         this.addHandler("mkactivity", ...args);
     }
 
-    mkcol<BodyType = undefined, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
+    mkcol<BodyType = Buffer, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
     ): void {
         this.addHandler("mkcol", ...args);
     }
 
-    move<BodyType = undefined, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
+    move<BodyType = Buffer, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
     ): void {
         this.addHandler("move", ...args);
     }
 
-    "m-search"<BodyType = undefined, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
+    "m-search"<BodyType = Buffer, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
     ): void {
         this.addHandler("m-search", ...args);
     }
 
-    notify<BodyType = undefined, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
+    notify<BodyType = Buffer, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
     ): void {
         this.addHandler("notify", ...args);
     }
 
-    propfind<BodyType = undefined, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
+    propfind<BodyType = Buffer, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
     ): void {
         this.addHandler("propfind", ...args);
     }
 
-    proppatch<BodyType = undefined, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
+    proppatch<BodyType = Buffer, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
     ): void {
         this.addHandler("proppatch", ...args);
     }
 
-    purge<BodyType = undefined, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
+    purge<BodyType = Buffer, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
     ): void {
         this.addHandler("purge", ...args);
     }
 
-    report<BodyType = undefined, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
+    report<BodyType = Buffer, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
     ): void {
         this.addHandler("report", ...args);
     }
 
-    search<BodyType = undefined, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
+    search<BodyType = Buffer, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
     ): void {
         this.addHandler("search", ...args);
     }
 
-    subscribe<BodyType = undefined, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
+    subscribe<BodyType = Buffer, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
     ): void {
         this.addHandler("subscribe", ...args);
     }
 
-    unsubscribe<BodyType = undefined, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
+    unsubscribe<BodyType = Buffer, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
     ): void {
         this.addHandler("unsubscribe", ...args);
     }
 
-    trace<BodyType = undefined, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
+    trace<BodyType = Buffer, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
     ): void {
         this.addHandler("trace", ...args);
     }
 
-    unlock<BodyType = undefined, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
+    unlock<BodyType = Buffer, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
     ): void {
         this.addHandler("unlock", ...args);
     }
 
-    link<BodyType = undefined, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
+    link<BodyType = Buffer, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
     ): void {
         this.addHandler("link", ...args);
     }
 
-    unlink<BodyType = undefined, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
+    unlink<BodyType = Buffer, ParamsType = {}, QueryType = {}, AuthType = GlobalAuthType, HeadersType = {}>(...args: BackendiumMethodArgsType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>
     ): void {
         this.addHandler("unlink", ...args);
     }
