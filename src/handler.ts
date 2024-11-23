@@ -1,12 +1,7 @@
 import BackendiumResponse from "./response.js";
 import Backendium from "./index.js";
 import {NextFunction, Request, RequestHandler, Response} from "express";
-import parseRequest, {
-    AuthCheckerType,
-    AuthFailedType,
-    BackendiumRequestOptionsType,
-    BackendiumRequestType
-} from "./request.js";
+import parseRequest, {BackendiumRequestOptionsType, BackendiumRequestType} from "./request.js";
 import {BackendiumRouter} from "./router";
 import {ValidationError} from "checkeasy";
 

@@ -1,4 +1,4 @@
-import e, {NextFunction, Request} from "express";
+import {NextFunction, Request} from "express";
 import {WSResponse} from "websocket-express";
 import Backendium from "./index.js";
 import {EventEmitter, EventKey} from "event-emitter-typescript";

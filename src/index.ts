@@ -3,7 +3,7 @@ import {Server} from "node:http";
 import {BackendiumRouter, MethodType} from "./router.js";
 import {EventEmitter, EventKey} from "event-emitter-typescript";
 import {WebSocketExpress, WSRequestHandler} from "websocket-express";
-import {BackendiumWebSocket, WebSocketOperations} from "./ws.js";
+import {BackendiumWebSocket} from "./ws.js";
 import Logger from "./logger";
 import BackendiumResponse from "./response";
 import {ValidationError} from "checkeasy";
