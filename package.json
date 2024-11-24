@@ -1,7 +1,7 @@
 {
   "name": "backendium",
   "version": "1.0.0",
-  "description": "",
+  "description": "Express-based javascript backend framework with websocket support",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
@@ -9,12 +9,13 @@
   },
   "dependencies": {
     "chalk": "^5.3.0",
-    "checkeasy": "^1.2.1",
     "event-emitter-typescript": "^2.1.1",
     "express": "^4.21.0",
-    "pino-http": "^10.3.0",
     "websocket-express": "^3.1.1",
     "ws": "^8.18.0"
+  },
+  "peerDependencies": {
+    "checkeasy": "^1.2.1"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
