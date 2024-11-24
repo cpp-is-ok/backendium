@@ -200,7 +200,7 @@ export default class Logger {
         let prefix = this.getPrefix("wsOutgoingEvent");
         this.logSeparately(
             [
-                chalk.green(prefix), chalk.green("Server has emitted event"), chalk.green(`${chalk.cyan(event)}`), chalk.green("to websocket connection on url"), chalk.cyan(url),
+                chalk.green(prefix), chalk.green("Server has emitted event"), chalk.green(`"${chalk.cyan(event)}"`), chalk.green("to websocket connection on url"), chalk.cyan(url),
                 ...(data !== null && data !== undefined ? [chalk.green("with data:"), this.formatDataColors(data)] : [])
             ], [
                 prefix, "Server has emitted event", `"${event}"`, "to websocket connection on url", url,

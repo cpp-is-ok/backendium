@@ -284,7 +284,7 @@ export class WebSocketRouteConstructor<InitDataType> {
         let socket = await response.accept();
         app.logger.wsConnected(request.originalUrl);
         if (this.initRequired) {
-            socket.on("message", (data) => {
+            socket.once("message", (data) => {
                 this.eventEmitter.emit("init", [socket, BackendiumWebSocket.rawDataParse(data), app, request.originalUrl]);
             });
         }
