@@ -67,24 +67,32 @@ export default class Logger {
             [`--++== ${name} v${version}; port: ${port} ==++--`]);
     }
 
-    requestFull(url: string, code: number, request: any, response: any) {
+    protected formatData(data: any) {
+        return Buffer.isBuffer(data) ? `"${data.toString()}"` : typeof data === "string" ? `"${data}"` : data;
+    }
+
+    protected formatDataColors(data: any, color = chalk.cyan) {
+        return Buffer.isBuffer(data) ? `"${color(data.toString())}"` : typeof data === "string" ? `"${color(data)}"` : data;
+    }
+
+    requestFull(url: string, code: number, request: any, response: any) { // query, auth, headers
         request = typeof request === "string" ? request.replaceAll("\n", "\\n") : request;
         response = typeof response === "string" ? response.replaceAll("\n", "\\n") : response;
         let toLog: Array<any> = [this.getPrefix("request"), `Handled request to`];
         let toLogColours: Array<any> = [...toLog, chalk.cyan(url)];
-        toLog[0] = '\n' + toLog[0];
+        // toLog[0] = '\n' + toLog[0];
         toLog.push(url);
         if (code !== undefined) {
             toLog.push(". Code:", code);
             toLogColours.push(". Code:", code);
         }
         if (request !== undefined) {
-            toLog.push(". Request:", typeof request === "string" ? `"${request}"` : request);
-            toLogColours.push(". Request:", typeof request === "string" ? chalk.cyan(`"${request}"`) : request);
+            toLog.push(". Request:", this.formatData(request));
+            toLogColours.push(". Request:", this.formatDataColors(request));
         }
         if (response !== undefined) {
-            toLog.push(". Response:", typeof response === "string" ? `"${response}"` : response);
-            toLogColours.push(". Response:", typeof response === "string" ? chalk.cyan(`"${response}"`) : response);
+            toLog.push(". Response:", this.formatData(response));
+            toLogColours.push(". Response:", this.formatDataColors(response));
         }
         this.logSeparately(toLogColours.map(elem => typeof elem === "string" ? chalk.green(elem) : elem), toLog);
     }
@@ -92,7 +100,7 @@ export default class Logger {
     request(url: string, code: number) {
         let toLog: Array<any> = [this.getPrefix("request"), `Handled request to`];
         let toLogColours: Array<any> = [...toLog, chalk.cyan(url)];
-        toLog[0] = '\n' + toLog[0];
+        // toLog[0] = '\n' + toLog[0];
         toLog.push(url);
         if (code !== undefined) {
             toLog.push(". Code:", code);
@@ -105,16 +113,11 @@ export default class Logger {
         request = typeof request === "string" ? request.replaceAll("\n", "\\n") : request;
         let toLog = [this.getPrefix("request"), `Error during handling request to`];
         let toLogColours = [...toLog, chalk.cyan(url)];
-        toLog[0] = '\n' + toLog[0];
+        // toLog[0] = '\n' + toLog[0];
         toLog.push(url);
         if (request !== undefined) {
-            toLog.push(". Request:", typeof request === "string" ? `"${request}"` : request);
-            try {
-                toLogColours.push(`. Request:`, typeof request === "string" ? chalk.cyan(`"${request}"`) : request);
-            }
-            catch (err) {
-                toLogColours.push(`. Request:`, typeof request === "string" ? chalk.cyan(`"${request}"`) : request);
-            }
+            toLog.push(". Request:", this.formatData(request));
+            toLogColours.push(`. Request:`, this.formatDataColors(request));
         }
         toLog.push(`\n${stackTrace}`);
         toLogColours.push(`\n${stackTrace}`);
@@ -123,34 +126,115 @@ export default class Logger {
 
     wsConnected(url: string) {
         let prefix = this.getPrefix("wsConnected");
-        this.logSeparately([chalk.green(prefix), chalk.green("Websocket connected on url"), chalk.cyan(url)], ['\n' + prefix, "Websocket connected on url", url]);
+        this.logSeparately([chalk.green(prefix), chalk.green("Websocket connected on url"), chalk.cyan(url)], [prefix, "Websocket connected on url", url]);
     }
 
     wsRejected(url: string) {
         let prefix = this.getPrefix("wsRejected");
-        this.logSeparately([chalk.red(prefix), chalk.red("Websocket rejected on url"), chalk.cyan(url)], ['\n' + prefix, "Websocket rejected on url", url]);
+        this.logSeparately([chalk.red(prefix), chalk.red("Websocket rejected on url"), chalk.cyan(url)], [prefix, "Websocket rejected on url", url]);
+    }
+
+    wsInitFull(url: string, data: any) {
+        let prefix = this.getPrefix("wsInit");
+        this.logSeparately(
+            [
+                chalk.green(prefix), chalk.green("Websocket init on url"), chalk.cyan(url), chalk.green("done"),
+                ...(data !== null && data !== undefined ? [chalk.green("Data:"), this.formatDataColors(data)] : [])
+            ],
+            [
+                prefix, "Websocket init on url", url, "done",
+                ...(data !== null && data !== undefined ? ["Data:", this.formatData(data)] : [])
+            ]
+        );
+    }
+
+    wsInitFailedFull(url: string, data: any) {
+        let prefix = this.getPrefix("wsInitFailed");
+        this.logSeparately(
+            [
+                chalk.green(prefix), chalk.green("Websocket init on url"), chalk.cyan(url), chalk.red("failed"),
+                ...(data !== null && data !== undefined ? [chalk.green("Data:"), this.formatDataColors(data)] : [])
+            ],
+            [
+                prefix, "Websocket init on url", url, "failed",
+                ...(data !== null && data !== undefined ? ["Data:", this.formatData(data)] : [])
+            ]
+        );
+    }
+
+    wsInit(url: string) {
+        let prefix = this.getPrefix("wsInit");
+        this.logSeparately([chalk.green(prefix), chalk.green("Websocket init on url"), chalk.cyan(url), chalk.red("done")],
+            [prefix, "Websocket init on url", url, "done"]);
+    }
+
+    wsInitFailed(url: string) {
+        let prefix = this.getPrefix("wsInitFailed");
+        this.logSeparately(
+            [chalk.green(prefix), chalk.green("Websocket init on url"), chalk.cyan(url), chalk.red("failed")],
+            [prefix, "Websocket init on url", url, "failed"]);
+    }
+
+    wsIncomingEventFull(url: string, event: string, data: any) {
+        let prefix = this.getPrefix("wsIncomingEvent");
+        this.logSeparately(
+            [
+                chalk.green(prefix), chalk.green("Client, connected on url"), chalk.cyan(url) + chalk.green(', '), chalk.green("has emitted event"), chalk.cyan(event),
+                ...(data !== null && data !== undefined ? [chalk.green("with data:"), this.formatDataColors(data)] : [])
+            ],
+            [
+                prefix, "Client, connected on url", url + ',', "has emitted event", event,
+                ...(data !== null && data !== undefined ? ["with data:", this.formatData(data)] : [])
+            ]
+        );
+    }
+
+    wsIncomingEvent(url: string, event: string) {
+        let prefix = this.getPrefix("wsIncomingEvent");
+        this.logSeparately([chalk.green(prefix), chalk.green("Client, connected on url"),
+                chalk.cyan(url) + chalk.green(', '), chalk.green("has emitted event"), chalk.cyan(event)],
+            [prefix, "Client, connected on url", url + ',', "has emitted event", event]);
+    }
+
+    wsOutgoingEventFull(url: string, event: string, data: any) {
+        let prefix = this.getPrefix("wsOutgoingEvent");
+        this.logSeparately(
+            [
+                chalk.green(prefix), chalk.green("Server has emitted event"), chalk.cyan(event), chalk.green("to websocket connection on url"), chalk.cyan(url),
+                ...(data !== null && data !== undefined ? [chalk.green("with data:"), this.formatDataColors(data)] : [])
+            ], [
+                prefix, "Server has emitted event", event, "to websocket connection on url", url,
+                ...(data !== null && data !== undefined ? ["with data:", this.formatData(data)] : [])
+            ]
+        );
+    }
+
+    wsOutgoingEvent(url: string, event: string) {
+        let prefix = this.getPrefix("wsOutgoingEvent");
+        this.logSeparately([chalk.green(prefix), chalk.green("Server has sent message"),
+                chalk.green("to websocket connection on url"), chalk.cyan(url)],
+            [prefix, "Server has sent message", "to websocket connection on url", url]);
     }
 
     wsInputFull(url: string, data: any) {
         let prefix = this.getPrefix("wsInput");
-        this.logSeparately([chalk.green(prefix), chalk.green("Websocket connection on url"),
-                chalk.cyan(url), chalk.green("has sent message"), (typeof data === "string" ? chalk.cyan(`"${data}"`) : data)],
-            ['\n' + prefix, "Websocket connection on url", url, "has sent message",
-                (typeof data === "string" ? `"${data}"` : data)]);
+        this.logSeparately([chalk.green(prefix), chalk.green("Client, connected on url"),
+                chalk.cyan(url) + chalk.green(', '), chalk.green("has sent message"), this.formatDataColors(data)],
+            [prefix, "Client, connected on url", url + ',', "has sent message", this.formatData(data)]);
     }
 
     wsInput(url: string) {
         let prefix = this.getPrefix("wsInput");
-        this.logSeparately([chalk.green(prefix), chalk.green("Websocket connection on url"),
-                chalk.cyan(url), chalk.green("has sent message")],
-            ['\n' + prefix, "Websocket connection on url", url, "has sent message"]);
+        this.logSeparately([chalk.green(prefix), chalk.green("Client, connected on url"),
+                chalk.cyan(url) + chalk.green(', '), chalk.green("has sent message")],
+            [prefix, "Client, connected on url", url + ',', "has sent message"]);
     }
 
     wsOutputFull(url: string, data: any) {
         let prefix = this.getPrefix("wsOutput");
-        this.logSeparately([chalk.green(prefix), chalk.green("Server has sent message"),
-            (typeof data === "string" ? chalk.cyan(`"${data}"`) : data), chalk.green("to websocket connection on url"),
-            chalk.cyan(url)], ['\n' + prefix, "Server has sent message", (typeof data === "string" ? `"${data}"` : data),
+        this.logSeparately([chalk.green(prefix), chalk.green("Server has sent message"), this.formatDataColors(data),
+            chalk.green("to websocket connection on url"),
+            chalk.cyan(url)], [prefix, "Server has sent message", this.formatData(data),
             "to websocket connection on url", url]);
     }
 
@@ -158,23 +242,18 @@ export default class Logger {
         let prefix = this.getPrefix("wsOutput");
         this.logSeparately([chalk.green(prefix), chalk.green("Server has sent message"),
                 chalk.green("to websocket connection on url"), chalk.cyan(url)],
-            ['\n' + prefix, "Server has sent message", "to websocket connection on url", url]);
+            [prefix, "Server has sent message", "to websocket connection on url", url]);
     }
 
     wsError(url: string, data: any, stackTrace: any) {
         data = typeof data === "string" ? data.replaceAll("\n", "\\n") : data;
         let toLog = [this.getPrefix("error"), `Error during handling websocket input to`];
         let toLogColours = [...toLog, chalk.cyan(url)];
-        toLog[0] = '\n' + toLog[0];
+        // toLog[0] = '\n' + toLog[0];
         toLog.push(url);
         if (data !== undefined) {
-            toLog.push(". Data:", typeof data === "string" ? `"${data}"` : data);
-            try {
-                toLogColours.push(`. Data:`, typeof data === "string" ? chalk.cyan(`"${data}"`) : data);
-            }
-            catch (err) {
-                toLogColours.push(`. Data:`, typeof data === "string" ? chalk.cyan(`"${data}"`) : data);
-            }
+            toLog.push(". Data:", this.formatData(data));
+            toLogColours.push(`. Data:`, this.formatDataColors(data));
         }
         toLog.push(`\n${stackTrace}`);
         toLogColours.push(`\n${stackTrace}`);
@@ -184,14 +263,12 @@ export default class Logger {
     wsClose(url: any) {
         let prefix = this.getPrefix("wsClose");
         this.logSeparately([chalk.green(prefix), chalk.green("Websocket connection on url"), chalk.cyan(url),
-            chalk.green("closed")], ['\n' + prefix, "Websocket connection on url",
-            url, "closed"]);
+            chalk.green("closed")], [prefix, "Websocket connection on url", url, "closed"]);
     }
 
     wsTerminate(url: any) {
         let prefix = this.getPrefix("wsTerminate");
         this.logSeparately([chalk.green(prefix), chalk.green("Websocket connection on url"), chalk.cyan(url),
-            chalk.green("terminated")], ['\n' + prefix, "Websocket connection on url",
-            url, "terminated"]);
+            chalk.red("terminated")], [prefix, "Websocket connection on url", url, "terminated"]);
     }
 }

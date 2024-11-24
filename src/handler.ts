@@ -75,6 +75,8 @@ export default function backendiumHandler<BodyType, ParamsType, QueryType, AuthT
             }
             try {response.end();}
             catch (error) {return;}
+            if (app.config.logging?.fullRequest) app.logger.requestFull(request.url, res.lastStatus, req.body, res.lastResponse);
+            else app.logger.request(request.url, res.lastStatus);
         }
         catch (error) {
             (errorHandler ?? app.config.errorHandler ?? defaultErrorHandler)(request, new BackendiumResponse(response, app), body, app, error, errorMessage ?? app.config.errorMessage);
