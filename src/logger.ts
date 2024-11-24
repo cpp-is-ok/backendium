@@ -71,8 +71,8 @@ export default class Logger {
         return Buffer.isBuffer(data) ? `"${data.toString()}"` : typeof data === "string" ? `"${data}"` : data;
     }
 
-    protected formatDataColors(data: any, color = chalk.cyan) {
-        return Buffer.isBuffer(data) ? `"${color(data.toString())}"` : typeof data === "string" ? `"${color(data)}"` : data;
+    protected formatDataColors(data: any, color = chalk.cyan, defaultColor = chalk.green) {
+        return Buffer.isBuffer(data) ? defaultColor(`"${color(data.toString())}"`) : typeof data === "string" ? defaultColor(`"${color(data)}"`) : data;
     }
 
     requestFull(url: string, code: number, request: any, response: any) { // query, auth, headers
@@ -179,11 +179,11 @@ export default class Logger {
         let prefix = this.getPrefix("wsIncomingEvent");
         this.logSeparately(
             [
-                chalk.green(prefix), chalk.green("Client, connected on url"), chalk.cyan(url) + chalk.green(', '), chalk.green("has emitted event"), chalk.cyan(event),
+                chalk.green(prefix), chalk.green("Client, connected on url"), chalk.cyan(url) + chalk.green(','), chalk.green("has emitted event"), chalk.green(`"${chalk.cyan(event)}"`),
                 ...(data !== null && data !== undefined ? [chalk.green("with data:"), this.formatDataColors(data)] : [])
             ],
             [
-                prefix, "Client, connected on url", url + ',', "has emitted event", event,
+                prefix, "Client, connected on url", url + ',', "has emitted event", `"${event}"`,
                 ...(data !== null && data !== undefined ? ["with data:", this.formatData(data)] : [])
             ]
         );
@@ -192,18 +192,18 @@ export default class Logger {
     wsIncomingEvent(url: string, event: string) {
         let prefix = this.getPrefix("wsIncomingEvent");
         this.logSeparately([chalk.green(prefix), chalk.green("Client, connected on url"),
-                chalk.cyan(url) + chalk.green(', '), chalk.green("has emitted event"), chalk.cyan(event)],
-            [prefix, "Client, connected on url", url + ',', "has emitted event", event]);
+                chalk.cyan(url) + chalk.green(','), chalk.green("has emitted event"), chalk.green(`${chalk.cyan(event)}`)],
+            [prefix, "Client, connected on url", url + ',', "has emitted event", `"${event}"`]);
     }
 
     wsOutgoingEventFull(url: string, event: string, data: any) {
         let prefix = this.getPrefix("wsOutgoingEvent");
         this.logSeparately(
             [
-                chalk.green(prefix), chalk.green("Server has emitted event"), chalk.cyan(event), chalk.green("to websocket connection on url"), chalk.cyan(url),
+                chalk.green(prefix), chalk.green("Server has emitted event"), chalk.green(`${chalk.cyan(event)}`), chalk.green("to websocket connection on url"), chalk.cyan(url),
                 ...(data !== null && data !== undefined ? [chalk.green("with data:"), this.formatDataColors(data)] : [])
             ], [
-                prefix, "Server has emitted event", event, "to websocket connection on url", url,
+                prefix, "Server has emitted event", `"${event}"`, "to websocket connection on url", url,
                 ...(data !== null && data !== undefined ? ["with data:", this.formatData(data)] : [])
             ]
         );
@@ -211,22 +211,21 @@ export default class Logger {
 
     wsOutgoingEvent(url: string, event: string) {
         let prefix = this.getPrefix("wsOutgoingEvent");
-        this.logSeparately([chalk.green(prefix), chalk.green("Server has sent message"),
-                chalk.green("to websocket connection on url"), chalk.cyan(url)],
-            [prefix, "Server has sent message", "to websocket connection on url", url]);
+        this.logSeparately([chalk.green(prefix), chalk.green("Server has emitted event"), chalk.green(`${chalk.cyan(event)}`), chalk.green("to websocket connection on url"), chalk.cyan(url)],
+            [prefix, "Server has emitted event", event, "to websocket connection on url", url]);
     }
 
     wsInputFull(url: string, data: any) {
         let prefix = this.getPrefix("wsInput");
         this.logSeparately([chalk.green(prefix), chalk.green("Client, connected on url"),
-                chalk.cyan(url) + chalk.green(', '), chalk.green("has sent message"), this.formatDataColors(data)],
+                chalk.cyan(url) + chalk.green(','), chalk.green("has sent message"), this.formatDataColors(data)],
             [prefix, "Client, connected on url", url + ',', "has sent message", this.formatData(data)]);
     }
 
     wsInput(url: string) {
         let prefix = this.getPrefix("wsInput");
         this.logSeparately([chalk.green(prefix), chalk.green("Client, connected on url"),
-                chalk.cyan(url) + chalk.green(', '), chalk.green("has sent message")],
+                chalk.cyan(url) + chalk.green(','), chalk.green("has sent message")],
             [prefix, "Client, connected on url", url + ',', "has sent message"]);
     }
 

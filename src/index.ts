@@ -16,6 +16,7 @@ export type BackendiumConfigType = {
     logging: {
         path?: string,
         fullRequest?: boolean,
+        fullWs?: boolean,
         replaceConsoleLog?: boolean
     }
     autoLogFull: boolean,

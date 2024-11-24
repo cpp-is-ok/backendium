@@ -34,7 +34,7 @@ export type BackendiumWebSocketEvents<InitDataType> = {
     messageBeforeEvents: [Buffer, BackendiumWebSocket<InitDataType>, Backendium, boolean],
     close: [BackendiumWebSocket<InitDataType>, number, Buffer, Backendium],
     error: [BackendiumWebSocket<InitDataType>, Error, Backendium],
-    init: [WebSocket & WebSocketExtension, any, Backendium],
+    init: [WebSocket & WebSocketExtension, Buffer, Backendium, string],
     upgrade: [BackendiumWebSocket<InitDataType>, IncomingMessage, Backendium],
     open: [BackendiumWebSocket<InitDataType>, Backendium],
     ping: [BackendiumWebSocket<InitDataType>, Buffer, Backendium],
@@ -81,22 +81,34 @@ export class BackendiumWebSocket<InitDataType> {
         if (isBinary) {
             this.eventEmitter.emit("notEventMessage", [message, socket, app, isBinary]);
             this.wsConstructor.eventEmitter.emit("notEventMessage", [message, socket, app, isBinary]);
+            if (app.config.logging?.fullWs) app.logger.wsInputFull(this.url, message);
+            else app.logger.wsInput(this.url);
             return;
         }
         try {
             let [head_, ...data] = message.toString().split("\n");
             let payload = Buffer.from(data.join("\n")), head = this.parseEventHead(head_, message, socket, app);
-            if (!head) return;
-            if ("event" in head) this.emitIncomingEvent(head.event, payload, socket, app, head);
+            if (!head) {
+                if (app.config.logging?.fullWs) app.logger.wsInputFull(this.url, message);
+                else app.logger.wsInput(this.url);
+                return;
+            }
+            if ("event" in head) {
+                this.emitIncomingEvent(head.event, payload, socket, app, head);
+                if (app.config.logging?.fullWs) app.logger.wsIncomingEventFull(this.url, head.event, payload.length ? payload : null);
+                else app.logger.wsIncomingEvent(this.url, head.event);
+            }
             else this.emitIncomingOperation(head.operation, payload, head.operationConfig, socket, app);
         } catch (error) {
             this.eventEmitter.emit("notEventMessage", [message, socket, app, isBinary]);
             this.wsConstructor.eventEmitter.emit("notEventMessage", [message, socket, app, isBinary]);
+            if (app.config.logging?.fullWs) app.logger.wsInputFull(this.url, message);
+            else app.logger.wsInput(this.url);
             return;
         }
     }
 
-    constructor(public socket: WebSocket & WebSocketExtension, public wsConstructor: WebSocketRouteConstructor<InitDataType>, app: Backendium, public initData: InitDataType) {
+    constructor(public socket: WebSocket & WebSocketExtension, public wsConstructor: WebSocketRouteConstructor<InitDataType>, public app: Backendium, public initData: InitDataType, public url: string) {
         this.eventEmitter.emit("accept", [this, this.wsConstructor, app]);
         this.wsConstructor.eventEmitter.emit("accept", [this, this.wsConstructor, app]);
         socket.on("message", (data, isBinary) => {
@@ -109,9 +121,16 @@ export class BackendiumWebSocket<InitDataType> {
             else {
                 this.eventEmitter.emit("notEventMessage", [buffer, this, app, isBinary]);
                 this.wsConstructor.eventEmitter.emit("notEventMessage", [buffer, this, app, isBinary]);
+                if (app.config.logging?.fullWs) app.logger.wsInputFull(url, data);
+                else app.logger.wsInput(url);
             }
             this.eventEmitter.emit("message", [buffer, this, app, isBinary]);
             this.wsConstructor.eventEmitter.emit("message", [buffer, this, app, isBinary]);
+        });
+        socket.on("close", (code, reason) => {
+            this.eventEmitter.emit("close", [this, code, reason, app]);
+            this.wsConstructor.eventEmitter.emit("close", [this, code, reason, app]);
+            app.logger.wsClose(url);
         });
         socket.on("upgrade", (request) => {
             this.eventEmitter.emit("upgrade", [this, request, app]);
@@ -176,9 +195,15 @@ export class BackendiumWebSocket<InitDataType> {
         this.eventEmitter.off(event, (args) => subscriber(...args));
     };
 
-    send(data: any) {
+    protected _send(data: any) {
         if (!(data instanceof Buffer) && typeof data === "object" || typeof data === "boolean") data = JSON.stringify(data);
         this.socket.send(data);
+    }
+
+    send(data: any) {
+        this._send(data);
+        if (this.app.config.logging?.fullWs) this.app.logger.wsOutputFull(this.url, data);
+        else this.app.logger.wsOutput(this.url);
     }
 
     protected static AnyToString(data: any): string {
@@ -187,12 +212,14 @@ export class BackendiumWebSocket<InitDataType> {
 
     emit(event: string, payload?: any) {
         BackendiumWebSocket.eventNameCheck(event);
-        this.send(`$${event}\n${BackendiumWebSocket.AnyToString(payload)}`);
+        this._send(`$${event}\n${BackendiumWebSocket.AnyToString(payload)}`);
+        if (this.app.config.logging?.fullWs) this.app.logger.wsOutgoingEventFull(this.url, event, payload);
+        else this.app.logger.wsOutgoingEvent(this.url, event);
     }
 
     emitOperation(event: string, operationConfig: any, payload: any) {
         BackendiumWebSocket.eventNameCheck(event);
-        this.send(`$$${event}$${BackendiumWebSocket.AnyToString(operationConfig)}\n${BackendiumWebSocket.AnyToString(payload)}`);
+        this._send(`$$${event}$${BackendiumWebSocket.AnyToString(operationConfig)}\n${BackendiumWebSocket.AnyToString(payload)}`);
     }
 }
 
@@ -238,8 +265,8 @@ export class WebSocketRouteConstructor<InitDataType> {
     protected operations = new EventEmitter<WebSocketOperations<InitDataType>>;
     protected initRequired = false;
 
-    protected _backendiumWebsocket(socket: WebSocket & WebSocketExtension, app: Backendium, initData: InitDataType) {
-        let backendiumSocket = new BackendiumWebSocket<InitDataType>(socket, this, app, initData);
+    protected _backendiumWebsocket(socket: WebSocket & WebSocketExtension, app: Backendium, initData: InitDataType, url: string) {
+        let backendiumSocket = new BackendiumWebSocket<InitDataType>(socket, this, app, initData, url);
         // @ts-ignore
         this.eventHandlers.forEach(([event, socket, validator]) => backendiumSocket.event(event, socket, validator));
     }
@@ -249,16 +276,20 @@ export class WebSocketRouteConstructor<InitDataType> {
             let [flag, code, message] = await this.acceptRejectFn(request, response, app);
             if (!flag) {
                 response.reject(code, message);
+                app.logger.wsRejected(request.originalUrl);
                 this.eventEmitter.emit("reject", [request, response, app, code, message]);
                 return;
             }
         }
         let socket = await response.accept();
+        app.logger.wsConnected(request.originalUrl);
         if (this.initRequired) {
-
+            socket.on("message", (data) => {
+                this.eventEmitter.emit("init", [socket, BackendiumWebSocket.rawDataParse(data), app, request.originalUrl]);
+            });
         }
         // @ts-ignore
-        else this._backendiumWebsocket(socket, app, undefined);
+        else this._backendiumWebsocket(socket, app, undefined, request.originalUrl);
     }
 
     public acceptReject(callback: (request: Request, response: WSResponse, app: Backendium) => AcceptResponseCallbackReturnType | Promise<AcceptResponseCallbackReturnType>): WebSocketRouteConstructor<InitDataType> {
@@ -312,19 +343,29 @@ export class WebSocketRouteConstructor<InitDataType> {
     
     public requireInit<Type>(callback: (connection: WebSocket & WebSocketExtension, data: Type, app: Backendium) => null | InitDataType | Promise<null | InitDataType>, validator: Validator<Type>) {
         this.initRequired = true;
-        this.on("init", async (socket: WebSocket & WebSocketExtension, data: any, app: Backendium) => {
+        this.on("init", async (socket, data, app, url) => {
             let [mainData, parsed] = validator ? parse(data, validator) : [data, true];
             if (!parsed || !mainData) {
                 this.eventEmitter.emit("initParsingFailed", [data, socket, app, validator]);
+                if (app.config.logging?.fullWs) app.logger.wsInitFailedFull(url, data);
+                else app.logger.wsInitFailed(url);
                 return;
             }
+            // @ts-ignore
             let ret = callback(socket, mainData, app);
             if (ret instanceof Promise) ret = await ret;
-            if (ret !== null) this._backendiumWebsocket(socket, app, ret);
-            else this.eventEmitter.emit("initFailed", [data, socket, app]);
+            if (ret !== null) {
+                if (app.config.logging?.fullWs) app.logger.wsInitFull(url, mainData);
+                else app.logger.wsInit(url);
+                this._backendiumWebsocket(socket, app, ret, url);
+            }
+            else {
+                this.eventEmitter.emit("initFailed", [data, socket, app]);
+                if (app.config.logging?.fullWs) app.logger.wsInitFailedFull(url, mainData);
+                else app.logger.wsInitFailed(url);
+            }
         });
     }
 }
 
-// @TODO logging
-// @TODO error handling
+// @TODO error handling +termination logging
