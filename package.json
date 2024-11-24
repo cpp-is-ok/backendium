@@ -1,6 +1,6 @@
 {
   "name": "backendium",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "Express-based javascript backend framework with websocket support",
   "main": "dist/index.js",
   "scripts": {
@@ -22,5 +22,5 @@
     "@types/ws": "^8.5.12",
     "typescript": "^5.5.3"
   },
-  "private": true
+  "files": ["src", "dist", "package.json", "readme.md", "tsconfig.json"]
 }
