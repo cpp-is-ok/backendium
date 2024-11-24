@@ -1,8 +1,9 @@
 {
   "name": "backendium",
   "version": "0.0.0",
-  "description": "Express-based javascript backend framework with websocket support",
+  "description": "Express-based javascript backend framework with websocket support and type-safe checkeasy validators",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "prepack": "tsc"
