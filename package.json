@@ -1,6 +1,6 @@
 {
   "name": "backendium",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Express-based javascript backend framework with websocket support and type-safe checkeasy validators",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
