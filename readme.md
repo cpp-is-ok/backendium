@@ -166,11 +166,41 @@ router.ws("/ws")
         socket.send(data);
     });
 ```
-request:
+### js build-in websockets:
 ```javascript
 const connection = new WebSocket("ws://localhost:8080/ws");
 connection.send("test");
 connection.onmessage = (message) => {
     console.log(message.data);
 };
+```
+### [Backendium connect](https://github.com/vssizoff/backendiumConnect)
+```typescript
+import {websocketRequest} from "backendium-connect";
+
+websocketRequest()
+    .on("message", (data, socket) => {
+        console.log(data); // data is Buffer
+    })
+    .send("ws://localhost:8080/ws")
+    .then(socket => {
+        socket.send("test");
+    });
+```
+## Events
+```typescript
+router.ws("/ws")
+    .event<number>("sqrt", (data, socket) => {
+        console.log(data);
+        socket.emit("response", Math.sqrt(data));
+    }, int())
+```
+only Backendium connect
+```typescript
+websocketRequest()
+    .event<number>("response", data => console.log(data), float())
+    .send("ws://localhost:8080/ws")
+    .then(socket => {
+        socket.emit("sqrt", 2);
+    });
 ```

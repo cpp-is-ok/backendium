@@ -164,7 +164,7 @@ export default class Logger {
 
     wsInit(url: string) {
         let prefix = this.getPrefix("wsInit");
-        this.logSeparately([chalk.green(prefix), chalk.green("Websocket init on url"), chalk.cyan(url), chalk.red("done")],
+        this.logSeparately([chalk.green(prefix), chalk.green("Websocket init on url"), chalk.cyan(url), chalk.green("done")],
             [prefix, "Websocket init on url", url, "done"]);
     }
 
