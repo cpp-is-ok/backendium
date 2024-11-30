@@ -4,6 +4,10 @@
 > 1. [Installation](#installation)
 > 2. [Basics](#basics)
 > 3. [Routing](#routing)
+> 4. [Request validation](#request-validation-checkeasy)
+> 5. [Authorization](#authorization)
+> 6. [Dynamic routing](#dynamic-routing)
+> 7. [Websocket](#websocket)
 # Installation
 ```bash
 npm i backendium checkeasy
@@ -43,7 +47,7 @@ app.start();
 ```
 ```typescript
 // handlers.ts
-import {BackendiumRouter} from "backendium/dist/router";
+import {BackendiumRouter} from "backendium";
 
 const router = new BackendiumRouter;
 
@@ -214,7 +218,7 @@ websocketRequest()
 ```
 ## Init
 ```typescript
-router.ws<string>("/ws/init")
+router.ws<string>("/ws-init")
     .event("test", (data, socket) => {
         socket.send(socket.initData);
     })
@@ -228,7 +232,7 @@ websocketRequest<number>()
     .on("message", data => {
         console.log(data.toString());
     })
-    .send("ws://localhost:8080/ws/init", 54)
+    .send("ws://localhost:8080/ws-init", 54)
     .then(socket => {
         socket.emit("test");
     });
