@@ -369,8 +369,4 @@ export class WebSocketRouteConstructor<InitDataType> {
     }
 }
 
-export function websocketConstructor<InitDataType = undefined>() {
-    return new WebSocketRouteConstructor<InitDataType>;
-}
-
 // @TODO error handling +termination logging
