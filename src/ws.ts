@@ -341,7 +341,7 @@ export class WebSocketRouteConstructor<InitDataType> {
         return this;
     }
     
-    public requireInit<Type>(callback: (connection: WebSocket & WebSocketExtension, data: Type, app: Backendium) => null | InitDataType | Promise<null | InitDataType>, validator: Validator<Type>) {
+    public requireInit<Type>(callback: (connection: WebSocket & WebSocketExtension, data: Type, app: Backendium) => null | InitDataType | Promise<null | InitDataType>, validator: Validator<Type>): WebSocketRouteConstructor<InitDataType> {
         this.initRequired = true;
         this.on("init", async (socket, data, app, url) => {
             let [mainData, parsed] = validator ? parse(data, validator) : [data, true];
@@ -365,7 +365,12 @@ export class WebSocketRouteConstructor<InitDataType> {
                 else app.logger.wsInitFailed(url);
             }
         });
+        return this;
     }
+}
+
+export function websocketConstructor<InitDataType = undefined>() {
+    return new WebSocketRouteConstructor<InitDataType>;
 }
 
 // @TODO error handling +termination logging

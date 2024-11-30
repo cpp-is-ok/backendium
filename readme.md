@@ -114,30 +114,38 @@ curl http://localhost:8080/validated/headers -H "n:2"
 ```
 # Authorization
 ```typescript
+const USERS: {[key: number]: string} = {
+    54: "sizoff"
+}
+
 router.post<Buffer, {}, {}, string>("/auth", (request, response) => {
     console.log(request.auth); // type of request.auth is string
     response.end();
 }, {
     authChecker(request, response) {
-        if (typeof request.headers.auth !== "string" || request.headers.auth !== "backendium") return null; // auth failed
-        return request.headers.auth; // return auth data
+        if (typeof request.headers.auth !== "string" || !(Number(request.headers.auth) in USERS)) return null; // auth failed
+        return USERS[Number(request.headers.auth)]; // return auth data
     }
 });
 ```
 ```bash
-curl http://localhost:8080/auth -H "auth:backendium" -d ""
+curl http://localhost:8080/auth -H "auth:54" -d ""
 ```
 ## Global (for router)
 ```typescript
 const router = new BackendiumRouter<string>;
 
+const USERS: {[key: number]: string} = {
+    54: "sizoff"
+}
+
 router.setAuth((request, response) => {
-    if (typeof request.headers.auth !== "string" || request.headers.auth !== "backendium") return null; // auth failed
-    return request.headers.auth; // return auth data
+    if (typeof request.headers.auth !== "string" || !(Number(request.headers.auth) in USERS)) return null; // auth failed
+    return USERS[Number(request.headers.auth)]; // return auth data
 });
 
 router.post("/auth", (request, response) => {
-    console.log(request.globalAuth); // type of request.globalAuth is string
+    console.log(request.globalAuth); // type of request.auth is string
     response.end();
 }, {
     auth: true
@@ -193,7 +201,7 @@ router.ws("/ws")
     .event<number>("sqrt", (data, socket) => {
         console.log(data);
         socket.emit("response", Math.sqrt(data));
-    }, int())
+    }, int());
 ```
 only Backendium connect
 ```typescript
@@ -202,5 +210,26 @@ websocketRequest()
     .send("ws://localhost:8080/ws")
     .then(socket => {
         socket.emit("sqrt", 2);
+    });
+```
+## Init
+```typescript
+router.ws<string>("/ws/init")
+    .event("test", (data, socket) => {
+        socket.send(socket.initData);
+    })
+    .requireInit<number>((socket, data) => {
+        if (!(data in USERS)) return null; // auth failed
+        return USERS[data]; // return auth data
+    }, int());
+```
+```typescript
+websocketRequest<number>()
+    .on("message", data => {
+        console.log(data.toString());
+    })
+    .send("ws://localhost:8080/ws/init", 54)
+    .then(socket => {
+        socket.emit("test");
     });
 ```

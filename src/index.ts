@@ -107,3 +107,6 @@ export default class Backendium<GlobalAuthType = any> extends BackendiumRouter<G
         });
     }
 }
+
+export * from "./ws";
+export * from "./router";
