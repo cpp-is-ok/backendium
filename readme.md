@@ -119,7 +119,7 @@ router.post<Buffer, {}, {}, string>("/auth", (request, response) => {
     response.end();
 }, {
     authChecker(request, response) {
-        if (typeof request.headers.auth !== "string") return null; // auth failed
+        if (typeof request.headers.auth !== "string" || request.headers.auth !== "backendium") return null; // auth failed
         return request.headers.auth; // return auth data
     }
 });
@@ -132,7 +132,7 @@ curl http://localhost:8080/auth -H "auth:backendium" -d ""
 const router = new BackendiumRouter<string>;
 
 router.setAuth((request, response) => {
-    if (typeof request.headers.auth !== "string") return null; // auth failed
+    if (typeof request.headers.auth !== "string" || request.headers.auth !== "backendium") return null; // auth failed
     return request.headers.auth; // return auth data
 });
 
@@ -142,4 +142,19 @@ router.post("/auth", (request, response) => {
 }, {
     auth: true
 });
+```
+# Dynamic routing
+More info: https://expressjs.com/en/guide/routing.html#route-paths
+```typescript
+router.get<Buffer, {n: number}>("/dynamic/:n", (request, response) => {
+    console.log(request.params);
+    response.end(Math.sqrt(request.params.n));
+}, {
+    paramsValidator: object({
+        n: strToInt()
+    })
+});
+```
+```bash
+curl http://localhost:8080/dynamic/2
 ```
