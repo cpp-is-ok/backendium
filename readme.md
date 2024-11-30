@@ -158,3 +158,19 @@ router.get<Buffer, {n: number}>("/dynamic/:n", (request, response) => {
 ```bash
 curl http://localhost:8080/dynamic/2
 ```
+# Websocket
+```typescript
+router.ws("/ws")
+    .on("message", (data, socket) => {
+        console.log(data.toString()); // data is Buffer
+        socket.send(data);
+    });
+```
+request:
+```javascript
+const connection = new WebSocket("ws://localhost:8080/ws");
+connection.send("test");
+connection.onmessage = (message) => {
+    console.log(message.data);
+};
+```

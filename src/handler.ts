@@ -23,7 +23,7 @@ export function defaultErrorHandler(request: Request, response: BackendiumRespon
 
 export function defaultValidationErrorHandler(request: Request, response: BackendiumResponse, app: Backendium, data: Buffer, error: ValidationError, message: string) {
     response.status(400);
-    response.end(message ?? "Validation failed");
+    response.end(message ?? "Validation failed"); // @TODO
 }
 
 export default function backendiumHandler<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>(handler: BackendiumHandlerType<BodyType, ParamsType, QueryType, AuthType, HeadersType, GlobalAuthType>,
