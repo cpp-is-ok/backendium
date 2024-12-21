@@ -9,10 +9,12 @@
 > 6. [Dynamic routing](#dynamic-routing)
 > 7. [Websocket](#websocket)
 # Installation
+The easiest way to install the library is using the `npm`. Type the following in the terminal:
 ```bash
 npm i backendium checkeasy
 ```
 # Basics
+You can use the following code as the default code for your projects:
 ```typescript
 import Backendium from "backendium";
 
@@ -24,16 +26,18 @@ app.get("*", (request, response, app, next) => {
 
 app.start();
 ```
-request:
+It creates a server that answers with json `{backendium: "0.0.0"}`, when you ask for any page.
+You can send a request with this command:
 ```bash
 curl http://localhost:8080/
 ```
-response:
+The responce will be:
 ```json
 {"backendium":"0.0.0"}
 ```
 # Routing
 ## Router class
+Now we 
 ```typescript
 // main.ts
 import Backendium from "backendium";
